@@ -1,0 +1,277 @@
+# ===========================================================================
+# GigBid runtime configuration.
+#
+# RULE: every marketplace rule, cost model, threshold, budget and model choice
+# lives in this file. Nothing here may be hard-coded in Python. The 2 Nov
+# "platform policy update" change request is absorbed by editing `bidding`
+# and `policy` below plus one prompt file - see docs/adr/0006-change-request.md
+# ===========================================================================
+
+marketplace:
+  # gigsim | upwork_live  -- selects the adapter behind MarketplacePort (R1)
+  mode: gigsim
+  rate_limit:
+    max_requests_per_minute: 20
+    max_burst: 5
+    # Politeness floor between scheduled scouting passes (E1 justification)
+    min_scout_interval_seconds: 1800
+  timeouts:
+    connect_seconds: 5.0
+    read_seconds: 30.0
+  retries:
+    max_attempts: 3
+    backoff_base_seconds: 0.5
+    backoff_max_seconds: 8.0
+    retry_on_status: [429, 500, 502, 503, 504]
+
+# ---------------------------------------------------------------------------
+# Models. `open` must work with open-weight models only (required).
+# `paid` is optional and only used where it measurably beats `open`.
+# Route by node: cheap frequent nodes get the small model.
+# ---------------------------------------------------------------------------
+models:
+  profile: open
+
+  # Client-side pacing. Set BELOW the provider's published quota so our own
+  # limiter, not theirs, is what slows us down - a 429 costs a round trip and
+  # a retry, a local wait costs neither. Groq's free tier is the target.
+  rate_limit:
+    requests_per_minute: 25
+    tokens_per_minute: 12000
+
+  profiles:
+    open:
+      provider: openai_compatible
+      base_url_env: OPEN_LLM_BASE_URL
+      api_key_env: OPEN_LLM_API_KEY
+      # Writer and Critic deliberately run the SAME model as the analysis
+      # nodes on this profile. gpt-oss-120b drafts better, but on the free
+      # tier a 120b draft on top of the analysis fan-out exceeds the
+      # tokens-per-minute quota and the Writer fails outright - a complete
+      # analysis with no proposal attached, which is worse than a slightly
+      # weaker proposal. Raise these to gpt-oss-120b on a paid tier; the
+      # routing table is the only thing that changes.
+      fallback:
+        base_url_env: OPEN_LLM_FALLBACK_BASE_URL
+        api_key_env: OPEN_LLM_FALLBACK_API_KEY
+        model: openai/gpt-oss-120b
+      nodes:
+        scout:           { model: openai/gpt-oss-20b, temperature: 0.0, max_tokens: 512 }
+        analyst:         { model: openai/gpt-oss-20b, temperature: 0.0, max_tokens: 1200 }
+        risk_assessor:   { model: openai/gpt-oss-20b, temperature: 0.0, max_tokens: 900 }
+        fit_matcher:     { model: openai/gpt-oss-20b, temperature: 0.0, max_tokens: 1200 }
+        pricing:         { model: openai/gpt-oss-20b, temperature: 0.0, max_tokens: 700 }
+        intent_router:   { model: openai/gpt-oss-20b, temperature: 0.0, max_tokens: 200 }
+        compliance:      { model: openai/gpt-oss-20b, temperature: 0.0, max_tokens: 700 }
+        claim_verifier:  { model: openai/gpt-oss-20b, temperature: 0.0, max_tokens: 900 }
+        writer:          { model: openai/gpt-oss-20b,   temperature: 0.4, max_tokens: 1600 }
+        critic:          { model: openai/gpt-oss-20b,   temperature: 0.1, max_tokens: 1200 }
+        client_liaison:  { model: openai/gpt-oss-20b,   temperature: 0.3, max_tokens: 1000 }
+        judge:           { model: openai/gpt-oss-20b,   temperature: 0.0, max_tokens: 900 }
+
+    paid:
+      provider: openai_compatible
+      base_url_env: PAID_LLM_BASE_URL
+      api_key_env: PAID_LLM_API_KEY
+      fallback: null
+      nodes:
+        scout:           { model: gpt-4.1-nano, temperature: 0.0, max_tokens: 512 }
+        analyst:         { model: gpt-4.1-mini, temperature: 0.0, max_tokens: 1200 }
+        risk_assessor:   { model: gpt-4.1-mini, temperature: 0.0, max_tokens: 900 }
+        fit_matcher:     { model: gpt-4.1-mini, temperature: 0.0, max_tokens: 1200 }
+        pricing:         { model: gpt-4.1-nano, temperature: 0.0, max_tokens: 700 }
+        intent_router:   { model: gpt-4.1-nano, temperature: 0.0, max_tokens: 200 }
+        compliance:      { model: gpt-4.1-mini, temperature: 0.0, max_tokens: 700 }
+        claim_verifier:  { model: gpt-4.1-mini, temperature: 0.0, max_tokens: 900 }
+        writer:          { model: gpt-4.1,      temperature: 0.4, max_tokens: 1600 }
+        critic:          { model: gpt-4.1,      temperature: 0.1, max_tokens: 1200 }
+        client_liaison:  { model: gpt-4.1-mini, temperature: 0.3, max_tokens: 1000 }
+        judge:           { model: gpt-4.1,      temperature: 0.0, max_tokens: 900 }
+
+  # Embeddings and reranker are OPEN models in BOTH profiles (assignment rule).
+  embeddings:
+    backend_env: EMBEDDING_BACKEND          # local | hosted | hash
+    local_model: BAAI/bge-small-en-v1.5
+    hosted_model: BAAI/bge-large-en-v1.5
+    dimensions: 384
+    batch_size: 32
+  reranker:
+    enabled: true
+    backend: local                           # local | llm | none
+    local_model: BAAI/bge-reranker-base
+    top_n: 8
+
+  # Per-1M-token USD prices used for cost accounting (E5 / B5).
+  # Free tiers are recorded as 0.0 but tokens/sec is still measured.
+  # Groq list prices per 1M tokens (verify before quoting externally; the free
+  # tier bills nothing, but costing at list makes the USD-per-proposal figure
+  # a number a reader can check rather than a decorative zero).
+  pricing_usd_per_mtok:
+    "openai/gpt-oss-20b":    { input: 0.10, output: 0.50 }
+    "openai/gpt-oss-120b":   { input: 0.15, output: 0.75 }
+    "qwen/qwen3.8-27b":      { input: 0.20, output: 0.60 }
+    "allam-2-7b":            { input: 0.05, output: 0.20 }
+    "gpt-4.1-nano":          { input: 0.10, output: 0.40 }
+    "gpt-4.1-mini":          { input: 0.40, output: 1.60 }
+    "gpt-4.1":               { input: 2.00, output: 8.00 }
+
+# ---------------------------------------------------------------------------
+# Budgets and loop limits (C4). Exceeding either moves the thread to
+# "needs_attention" -- it never silently truncates.
+# ---------------------------------------------------------------------------
+budgets:
+  max_graph_steps: 40
+  max_revisions: 2                 # Critic may bounce a draft back at most twice
+  max_tokens_per_job: 45000
+  max_tokens_per_proposal: 20000      # reported, not a second hard cap
+  max_wall_clock_seconds_per_job: 120
+  p95_latency_target_seconds_per_job: 25.0
+  p95_latency_target_seconds_per_proposal: 45.0
+  max_usd_per_job: 0.02
+  max_usd_per_proposal: 0.05
+
+thresholds:
+  minimum_fit_score: 0.60
+  maximum_risk_score: 0.70
+  watch_band:                      # between skip and bid -> "watch"
+    fit_low: 0.50
+    fit_high: 0.60
+  scam_block_score: 0.80
+  max_unsupported_claims: 0        # R5: zero unsupported claims may ship
+  min_claim_support_ratio: 0.85
+
+# ---------------------------------------------------------------------------
+# Bidding economics. THIS BLOCK IS THE CHANGE-REQUEST SURFACE.
+# A platform policy update that alters Connects cost, fees or bid rules is
+# absorbed here without touching Python. See docs/adr/0006-change-request.md
+# ---------------------------------------------------------------------------
+bidding:
+  connects:
+    weekly_budget: 120
+    base_cost_per_proposal: 8
+    # Cost multipliers the simulator/platform may apply
+    boost_multiplier: 2.0
+    premium_job_surcharge: 4
+    # Minimum expected value (USD) per Connect before bidding is worthwhile
+    min_expected_value_per_connect_usd: 6.0
+  fees:
+    platform_commission_rate: 0.10
+    withdrawal_fee_usd: 0.99
+  pricing:
+    # Fair band is computed from market statistics then clamped by these
+    fair_band_lower_percentile: 25
+    fair_band_upper_percentile: 75
+    undercut_tolerance: 0.15        # how far below median we may go
+    overbid_tolerance: 0.25
+    minimum_effective_hourly_usd: 18.0
+  eligibility:
+    max_proposals_per_day: 20
+    min_client_rating: 3.0
+    require_payment_verified: false
+    skip_if_hires_rate_below: 0.05
+
+# ---------------------------------------------------------------------------
+# RAG. The shipped variant is chosen by evaluation (R6), set here, never
+# defaulted in code. rag_eval.py writes the numbers that justify this line.
+# ---------------------------------------------------------------------------
+rag:
+  shipped_variant: v4_outcome        # chosen by measurement; see evals/results/rag_variants.json and docs/adr/0004-rag-variant.md
+  chunking:
+    max_tokens: 420
+    overlap_tokens: 60
+  retrieval:
+    k: 8
+    fetch_k: 40
+    rrf_k: 60                       # reciprocal rank fusion constant
+    mmr_lambda: 0.65
+  variants:
+    v0_naive:        { k: 8 }
+    v1_decompose:    { k_per_requirement: 4, max_requirements: 6 }
+    v2_hybrid:       { k: 8, fetch_k: 40, bm25_weight: 0.5 }
+    # rerank_candidates caps CPU cost: the cross-encoder runs ~1.3s/pair on a
+    # GPU-less host, so reranking all 40 fused candidates costs 53s per job.
+    v3_rerank:       { k: 8, fetch_k: 40, rerank_top_n: 8, rerank_candidates: 10 }
+    v4_outcome:      { k: 8, fetch_k: 40, won_boost: 0.25, replied_boost: 0.10, ignored_penalty: 0.15 }
+    v5_multivector:  { k: 8, fetch_k: 40, views: [summary, readme, code] }
+    v6_contextual:   { k: 8, fetch_k: 40 }
+    v7_hyde:         { k: 8, fetch_k: 40, hypothetical_tokens: 320 }
+    v8_corrective:   { k: 8, fetch_k: 40, grade_threshold: 0.5, max_requeries: 2 }
+    v9_skillgraph:   { k: 8, hops: 2, edge_weight_decay: 0.6 }
+
+# ---------------------------------------------------------------------------
+# Long-term memory (R7). Nothing is written to memory except through these
+# rules. Raw tool output is never promoted.
+# ---------------------------------------------------------------------------
+memory:
+  enabled: true
+  stores: [style, outcome]
+  promotion:
+    style:
+      # A user edit becomes a style rule only when the same edit pattern
+      # recurs at least min_occurrences times across distinct proposals.
+      min_occurrences: 2
+      min_edit_similarity: 0.75
+      max_rules: 40
+      require_human_origin: true
+    outcome:
+      # An outcome becomes a memory only on a terminal, observed event.
+      terminal_states: [won, replied, interview, hired, lost, ignored]
+      min_observations_per_category: 3
+      max_rules: 60
+      decay_half_life_days: 90
+  never_promote:
+    - raw_tool_output
+    - client_pii
+    - job_post_text
+    - model_chain_of_thought
+
+# ---------------------------------------------------------------------------
+# Policy pack binding for the Compliance Guard. Rule bodies live in
+# data/policy_pack/*.md so a policy change is a data change.
+# ---------------------------------------------------------------------------
+policy:
+  pack_path: data/policy_pack
+  active_pack: marketplace_policy.md
+  enforcement:
+    block_on: [off_platform_contact, fabricated_experience, guaranteed_outcome, unpaid_production_work, pii_leak]
+    warn_on: [generic_opening, overlong_proposal, missing_screening_answer]
+  proposal_limits:
+    max_words: 320
+    min_words: 90
+    max_screening_answer_words: 160
+
+# ---------------------------------------------------------------------------
+# Safety (R9 / E4).
+# ---------------------------------------------------------------------------
+safety:
+  injection_defence:
+    enabled: true
+    delimiter: "<<<UNTRUSTED_MARKETPLACE_CONTENT>>>"
+    # NOTE: the patterns themselves are compiled regexes in
+    # agent/safety.py:INJECTION_PATTERNS, not data. That is a deliberate
+    # exception to the "behaviour lives in config" rule: they are code with
+    # capture groups and severities, and a YAML copy would be a second source
+    # of truth that drifts. An earlier version of this file pointed at a
+    # data/policy_pack/injection_patterns.yaml that never existed - config
+    # drift caught in review. Documented here rather than silently removed.
+    patterns_defined_in: agent/safety.py:INJECTION_PATTERNS
+    quarantine_on_detect: true
+  pii_masking:
+    enabled: true
+    mask_in: [logs, traces, memory]
+    types: [email, phone, credit_card, iban, crypto_wallet, url_with_credentials]
+  autonomy:
+    # Never "auto_send". The highest level still requires approval to send.
+    default_level: assisted          # manual | assisted | auto_skip
+    allow_auto_skip_below_fit: 0.35
+
+observability:
+  backend: langfuse                  # langfuse | langsmith | none
+  sample_rate: 1.0
+  redact_pii: true
+  emit_node_timings: true
+
+scheduling:
+  saved_search_default_interval_seconds: 3600
+  max_concurrent_job_threads: 4
+  dead_letter_after_attempts: 3
