@@ -1,0 +1,664 @@
+{
+  "marketplace": {
+    "create_proposal_draft": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": false,
+        "title": null
+      },
+      "input_schema": {
+        "properties": {
+          "amount_usd": {
+            "title": "Amount Usd",
+            "type": "number"
+          },
+          "approval_token": {
+            "default": "",
+            "title": "Approval Token",
+            "type": "string"
+          },
+          "cover_letter": {
+            "title": "Cover Letter",
+            "type": "string"
+          },
+          "dry_run": {
+            "default": true,
+            "title": "Dry Run",
+            "type": "boolean"
+          },
+          "idempotency_key": {
+            "default": "",
+            "title": "Idempotency Key",
+            "type": "string"
+          },
+          "job_id": {
+            "title": "Job Id",
+            "type": "string"
+          },
+          "screening_answers": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Screening Answers"
+          }
+        },
+        "required": [
+          "job_id",
+          "cover_letter",
+          "amount_usd"
+        ],
+        "title": "create_proposal_draftArguments",
+        "type": "object"
+      }
+    },
+    "get_client_history": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true,
+        "title": null
+      },
+      "input_schema": {
+        "properties": {
+          "client_id": {
+            "title": "Client Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "client_id"
+        ],
+        "title": "get_client_historyArguments",
+        "type": "object"
+      }
+    },
+    "get_connects_balance": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true,
+        "title": null
+      },
+      "input_schema": {
+        "properties": {
+          "freelancer_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Freelancer Id"
+          }
+        },
+        "title": "get_connects_balanceArguments",
+        "type": "object"
+      }
+    },
+    "get_job": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true,
+        "title": null
+      },
+      "input_schema": {
+        "properties": {
+          "job_id": {
+            "title": "Job Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "job_id"
+        ],
+        "title": "get_jobArguments",
+        "type": "object"
+      }
+    },
+    "get_market_rates": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true,
+        "title": null
+      },
+      "input_schema": {
+        "properties": {
+          "skill": {
+            "title": "Skill",
+            "type": "string"
+          }
+        },
+        "required": [
+          "skill"
+        ],
+        "title": "get_market_ratesArguments",
+        "type": "object"
+      }
+    },
+    "list_messages": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true,
+        "title": null
+      },
+      "input_schema": {
+        "properties": {
+          "thread_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Thread Id"
+          }
+        },
+        "title": "list_messagesArguments",
+        "type": "object"
+      }
+    },
+    "search_jobs": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true,
+        "title": null
+      },
+      "input_schema": {
+        "properties": {
+          "budget_min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Budget Min"
+          },
+          "limit": {
+            "default": 20,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "posted_after": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Posted After"
+          },
+          "query": {
+            "default": "",
+            "title": "Query",
+            "type": "string"
+          },
+          "skills": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Skills"
+          }
+        },
+        "title": "search_jobsArguments",
+        "type": "object"
+      }
+    },
+    "send_message": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": false,
+        "title": null
+      },
+      "input_schema": {
+        "properties": {
+          "approval_token": {
+            "default": "",
+            "title": "Approval Token",
+            "type": "string"
+          },
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "dry_run": {
+            "default": true,
+            "title": "Dry Run",
+            "type": "boolean"
+          },
+          "idempotency_key": {
+            "default": "",
+            "title": "Idempotency Key",
+            "type": "string"
+          },
+          "job_id": {
+            "default": "",
+            "title": "Job Id",
+            "type": "string"
+          },
+          "thread_id": {
+            "title": "Thread Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "thread_id",
+          "body"
+        ],
+        "title": "send_messageArguments",
+        "type": "object"
+      }
+    },
+    "submit_proposal": {
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": false,
+        "title": null
+      },
+      "input_schema": {
+        "properties": {
+          "approval_token": {
+            "default": "",
+            "title": "Approval Token",
+            "type": "string"
+          },
+          "dry_run": {
+            "default": true,
+            "title": "Dry Run",
+            "type": "boolean"
+          },
+          "idempotency_key": {
+            "default": "",
+            "title": "Idempotency Key",
+            "type": "string"
+          },
+          "proposal_id": {
+            "title": "Proposal Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "proposal_id"
+        ],
+        "title": "submit_proposalArguments",
+        "type": "object"
+      }
+    }
+  },
+  "portfolio": {
+    "find_projects": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": null
+      },
+      "input_schema": {
+        "properties": {
+          "industry": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Industry"
+          },
+          "persona_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Persona Id"
+          },
+          "skill": {
+            "title": "Skill",
+            "type": "string"
+          }
+        },
+        "required": [
+          "skill"
+        ],
+        "title": "find_projectsArguments",
+        "type": "object"
+      }
+    },
+    "get_case_study": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": null
+      },
+      "input_schema": {
+        "properties": {
+          "evidence_id": {
+            "title": "Evidence Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "evidence_id"
+        ],
+        "title": "get_case_studyArguments",
+        "type": "object"
+      }
+    },
+    "list_skills": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": null
+      },
+      "input_schema": {
+        "properties": {
+          "persona_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Persona Id"
+          }
+        },
+        "title": "list_skillsArguments",
+        "type": "object"
+      }
+    },
+    "search_evidence": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": null
+      },
+      "input_schema": {
+        "properties": {
+          "evidence_types": {
+            "anyOf": [
+              {
+                "items": {
+                  "enum": [
+                    "case_study",
+                    "readme",
+                    "code",
+                    "review",
+                    "proposal",
+                    "cv"
+                  ],
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Evidence Types"
+          },
+          "industry": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Industry"
+          },
+          "k": {
+            "default": 8,
+            "title": "K",
+            "type": "integer"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "enum": [
+                  "won",
+                  "replied",
+                  "ignored",
+                  "delivered"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Outcome"
+          },
+          "requirement": {
+            "title": "Requirement",
+            "type": "string"
+          }
+        },
+        "required": [
+          "requirement"
+        ],
+        "title": "search_evidenceArguments",
+        "type": "object"
+      }
+    }
+  },
+  "workspace": {
+    "create_email_draft": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": false,
+        "title": null
+      },
+      "input_schema": {
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "default": "",
+            "title": "Idempotency Key",
+            "type": "string"
+          },
+          "job_id": {
+            "default": "",
+            "title": "Job Id",
+            "type": "string"
+          },
+          "subject": {
+            "title": "Subject",
+            "type": "string"
+          },
+          "to": {
+            "title": "To",
+            "type": "string"
+          }
+        },
+        "required": [
+          "to",
+          "subject",
+          "body"
+        ],
+        "title": "create_email_draftArguments",
+        "type": "object"
+      }
+    },
+    "create_tentative_hold": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": false,
+        "title": null
+      },
+      "input_schema": {
+        "properties": {
+          "end_iso": {
+            "title": "End Iso",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "default": "",
+            "title": "Idempotency Key",
+            "type": "string"
+          },
+          "job_id": {
+            "default": "",
+            "title": "Job Id",
+            "type": "string"
+          },
+          "start_iso": {
+            "title": "Start Iso",
+            "type": "string"
+          },
+          "title": {
+            "default": "Client interview (tentative)",
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "start_iso",
+          "end_iso"
+        ],
+        "title": "create_tentative_holdArguments",
+        "type": "object"
+      }
+    },
+    "find_free_slots": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": null
+      },
+      "input_schema": {
+        "properties": {
+          "days_ahead": {
+            "default": 7,
+            "title": "Days Ahead",
+            "type": "integer"
+          },
+          "duration_minutes": {
+            "default": 30,
+            "title": "Duration Minutes",
+            "type": "integer"
+          },
+          "limit": {
+            "default": 6,
+            "title": "Limit",
+            "type": "integer"
+          }
+        },
+        "title": "find_free_slotsArguments",
+        "type": "object"
+      }
+    },
+    "list_holds": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": null
+      },
+      "input_schema": {
+        "properties": {},
+        "title": "list_holdsArguments",
+        "type": "object"
+      }
+    },
+    "release_hold": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": false,
+        "title": null
+      },
+      "input_schema": {
+        "properties": {
+          "hold_id": {
+            "title": "Hold Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "hold_id"
+        ],
+        "title": "release_holdArguments",
+        "type": "object"
+      }
+    }
+  }
+}
