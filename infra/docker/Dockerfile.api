@@ -1,0 +1,41 @@
+# syntax=docker/dockerfile:1.7
+FROM python:3.12-slim AS base
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /app
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends build-essential curl \
+ && rm -rf /var/lib/apt/lists/*
+
+COPY pyproject.toml ./
+# Install dependencies in their own layer so code changes do not re-resolve.
+RUN pip install --upgrade pip && pip install -e ".[embed]" || pip install -e .
+
+COPY agent/ ./agent/
+COPY rag/ ./rag/
+COPY mcp_servers/ ./mcp_servers/
+COPY apps/api/ ./apps/api/
+COPY worker/ ./worker/
+COPY evals/ ./evals/
+COPY gigsim/ ./gigsim/
+COPY scripts/ ./scripts/
+COPY data/ ./data/
+
+# Pre-build the vector index at image build time: a cold first request that
+# spends 110s embedding the corpus looks like an outage to the user.
+RUN python -m scripts.generate_corpus --seed 20261115 \
+ && python -m scripts.generate_jobs --seed 20261115 \
+ && python -c "from rag.retriever import get_index; get_index(); print('index warm')" || true
+
+RUN useradd -m -u 10001 gigbid && chown -R gigbid:gigbid /app
+USER gigbid
+
+EXPOSE 8000
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
+  CMD curl -fsS http://localhost:8000/health || exit 1
+
+CMD ["uvicorn", "apps.api.main:app", "--host", "0.0.0.0", "--port", "8000"]

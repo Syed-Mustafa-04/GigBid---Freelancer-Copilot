@@ -1,0 +1,5 @@
+# syntax=docker/dockerfile:1.7
+FROM gigbid-api:latest
+USER gigbid
+# The local scheduler needs no broker; swap for the Celery line when Redis is up.
+CMD ["python", "-m", "worker.tasks"]

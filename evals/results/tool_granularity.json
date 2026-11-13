@@ -1,0 +1,1051 @@
+{
+  "generated_at": "2026-11-15T11:14:30.364770+00:00",
+  "n_tasks": 40,
+  "provider": "offline_stub",
+  "model_scoring_available": false,
+  "results": {
+    "fine": {
+      "n_tools": 10,
+      "tool_names": [
+        "get_case_study",
+        "get_cv",
+        "get_repo",
+        "list_skills",
+        "search_case_studies",
+        "search_code",
+        "search_proposals",
+        "search_repos",
+        "search_reviews",
+        "search_won_proposals"
+      ],
+      "schema_tokens_per_call": 672,
+      "description_tokens": 59,
+      "schema_tokens_per_task": 672,
+      "oracle": {
+        "exact_expressible_rate": 0.775,
+        "argument_support_rate": 0.525,
+        "mean_candidates_per_task": 4.28,
+        "uninformed_selection_accuracy": 0.3293
+      },
+      "model": null,
+      "detail": {
+        "oracle_rows": [
+          {
+            "task_id": "t01",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 6,
+            "selection_difficulty": 0.167
+          },
+          {
+            "task_id": "t02",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 6,
+            "selection_difficulty": 0.167
+          },
+          {
+            "task_id": "t03",
+            "capability": "get_item",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 3,
+            "selection_difficulty": 0.333
+          },
+          {
+            "task_id": "t04",
+            "capability": "list_skills",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t05",
+            "capability": "find_projects",
+            "expressible_exactly": false,
+            "arguments_supported": false,
+            "candidate_tools": 2,
+            "selection_difficulty": 0.5
+          },
+          {
+            "task_id": "t06",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": false,
+            "candidate_tools": 6,
+            "selection_difficulty": 0.167
+          },
+          {
+            "task_id": "t07",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": false,
+            "candidate_tools": 6,
+            "selection_difficulty": 0.167
+          },
+          {
+            "task_id": "t08",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": false,
+            "candidate_tools": 6,
+            "selection_difficulty": 0.167
+          },
+          {
+            "task_id": "t09",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": false,
+            "candidate_tools": 6,
+            "selection_difficulty": 0.167
+          },
+          {
+            "task_id": "t10",
+            "capability": "find_projects",
+            "expressible_exactly": false,
+            "arguments_supported": false,
+            "candidate_tools": 2,
+            "selection_difficulty": 0.5
+          },
+          {
+            "task_id": "t11",
+            "capability": "get_item",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 3,
+            "selection_difficulty": 0.333
+          },
+          {
+            "task_id": "t12",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 6,
+            "selection_difficulty": 0.167
+          },
+          {
+            "task_id": "t13",
+            "capability": "find_projects",
+            "expressible_exactly": false,
+            "arguments_supported": false,
+            "candidate_tools": 2,
+            "selection_difficulty": 0.5
+          },
+          {
+            "task_id": "t14",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 6,
+            "selection_difficulty": 0.167
+          },
+          {
+            "task_id": "t15",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": false,
+            "candidate_tools": 6,
+            "selection_difficulty": 0.167
+          },
+          {
+            "task_id": "t16",
+            "capability": "list_skills",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t17",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 6,
+            "selection_difficulty": 0.167
+          },
+          {
+            "task_id": "t18",
+            "capability": "find_projects",
+            "expressible_exactly": false,
+            "arguments_supported": false,
+            "candidate_tools": 2,
+            "selection_difficulty": 0.5
+          },
+          {
+            "task_id": "t19",
+            "capability": "get_item",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 3,
+            "selection_difficulty": 0.333
+          },
+          {
+            "task_id": "t20",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 6,
+            "selection_difficulty": 0.167
+          },
+          {
+            "task_id": "t21",
+            "capability": "find_projects",
+            "expressible_exactly": false,
+            "arguments_supported": false,
+            "candidate_tools": 2,
+            "selection_difficulty": 0.5
+          },
+          {
+            "task_id": "t22",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": false,
+            "candidate_tools": 6,
+            "selection_difficulty": 0.167
+          },
+          {
+            "task_id": "t23",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": false,
+            "candidate_tools": 6,
+            "selection_difficulty": 0.167
+          },
+          {
+            "task_id": "t24",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 6,
+            "selection_difficulty": 0.167
+          },
+          {
+            "task_id": "t25",
+            "capability": "get_item",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 3,
+            "selection_difficulty": 0.333
+          },
+          {
+            "task_id": "t26",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 6,
+            "selection_difficulty": 0.167
+          },
+          {
+            "task_id": "t27",
+            "capability": "find_projects",
+            "expressible_exactly": false,
+            "arguments_supported": false,
+            "candidate_tools": 2,
+            "selection_difficulty": 0.5
+          },
+          {
+            "task_id": "t28",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": false,
+            "candidate_tools": 6,
+            "selection_difficulty": 0.167
+          },
+          {
+            "task_id": "t29",
+            "capability": "get_item",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 3,
+            "selection_difficulty": 0.333
+          },
+          {
+            "task_id": "t30",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 6,
+            "selection_difficulty": 0.167
+          },
+          {
+            "task_id": "t31",
+            "capability": "list_skills",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t32",
+            "capability": "find_projects",
+            "expressible_exactly": false,
+            "arguments_supported": false,
+            "candidate_tools": 2,
+            "selection_difficulty": 0.5
+          },
+          {
+            "task_id": "t33",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": false,
+            "candidate_tools": 6,
+            "selection_difficulty": 0.167
+          },
+          {
+            "task_id": "t34",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": false,
+            "candidate_tools": 6,
+            "selection_difficulty": 0.167
+          },
+          {
+            "task_id": "t35",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 6,
+            "selection_difficulty": 0.167
+          },
+          {
+            "task_id": "t36",
+            "capability": "find_projects",
+            "expressible_exactly": false,
+            "arguments_supported": false,
+            "candidate_tools": 2,
+            "selection_difficulty": 0.5
+          },
+          {
+            "task_id": "t37",
+            "capability": "get_item",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 3,
+            "selection_difficulty": 0.333
+          },
+          {
+            "task_id": "t38",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 6,
+            "selection_difficulty": 0.167
+          },
+          {
+            "task_id": "t39",
+            "capability": "find_projects",
+            "expressible_exactly": false,
+            "arguments_supported": false,
+            "candidate_tools": 2,
+            "selection_difficulty": 0.5
+          },
+          {
+            "task_id": "t40",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 6,
+            "selection_difficulty": 0.167
+          }
+        ],
+        "model_rows": null
+      }
+    },
+    "coarse": {
+      "n_tools": 3,
+      "tool_names": [
+        "describe_portfolio",
+        "get_item",
+        "search_portfolio"
+      ],
+      "schema_tokens_per_call": 305,
+      "description_tokens": 59,
+      "schema_tokens_per_task": 305,
+      "oracle": {
+        "exact_expressible_rate": 0.775,
+        "argument_support_rate": 0.825,
+        "mean_candidates_per_task": 1.23,
+        "uninformed_selection_accuracy": 0.8875
+      },
+      "model": null,
+      "detail": {
+        "oracle_rows": [
+          {
+            "task_id": "t01",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t02",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t03",
+            "capability": "get_item",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t04",
+            "capability": "list_skills",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t05",
+            "capability": "find_projects",
+            "expressible_exactly": false,
+            "arguments_supported": false,
+            "candidate_tools": 2,
+            "selection_difficulty": 0.5
+          },
+          {
+            "task_id": "t06",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t07",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t08",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t09",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t10",
+            "capability": "find_projects",
+            "expressible_exactly": false,
+            "arguments_supported": true,
+            "candidate_tools": 2,
+            "selection_difficulty": 0.5
+          },
+          {
+            "task_id": "t11",
+            "capability": "get_item",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t12",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t13",
+            "capability": "find_projects",
+            "expressible_exactly": false,
+            "arguments_supported": false,
+            "candidate_tools": 2,
+            "selection_difficulty": 0.5
+          },
+          {
+            "task_id": "t14",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t15",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t16",
+            "capability": "list_skills",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t17",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t18",
+            "capability": "find_projects",
+            "expressible_exactly": false,
+            "arguments_supported": false,
+            "candidate_tools": 2,
+            "selection_difficulty": 0.5
+          },
+          {
+            "task_id": "t19",
+            "capability": "get_item",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t20",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t21",
+            "capability": "find_projects",
+            "expressible_exactly": false,
+            "arguments_supported": false,
+            "candidate_tools": 2,
+            "selection_difficulty": 0.5
+          },
+          {
+            "task_id": "t22",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t23",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t24",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t25",
+            "capability": "get_item",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t26",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t27",
+            "capability": "find_projects",
+            "expressible_exactly": false,
+            "arguments_supported": true,
+            "candidate_tools": 2,
+            "selection_difficulty": 0.5
+          },
+          {
+            "task_id": "t28",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t29",
+            "capability": "get_item",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t30",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t31",
+            "capability": "list_skills",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t32",
+            "capability": "find_projects",
+            "expressible_exactly": false,
+            "arguments_supported": false,
+            "candidate_tools": 2,
+            "selection_difficulty": 0.5
+          },
+          {
+            "task_id": "t33",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t34",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t35",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t36",
+            "capability": "find_projects",
+            "expressible_exactly": false,
+            "arguments_supported": false,
+            "candidate_tools": 2,
+            "selection_difficulty": 0.5
+          },
+          {
+            "task_id": "t37",
+            "capability": "get_item",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t38",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t39",
+            "capability": "find_projects",
+            "expressible_exactly": false,
+            "arguments_supported": false,
+            "candidate_tools": 2,
+            "selection_difficulty": 0.5
+          },
+          {
+            "task_id": "t40",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          }
+        ],
+        "model_rows": null
+      }
+    },
+    "best": {
+      "n_tools": 4,
+      "tool_names": [
+        "find_projects",
+        "get_case_study",
+        "list_skills",
+        "search_evidence"
+      ],
+      "schema_tokens_per_call": 813,
+      "description_tokens": 405,
+      "schema_tokens_per_task": 813,
+      "oracle": {
+        "exact_expressible_rate": 1.0,
+        "argument_support_rate": 1.0,
+        "mean_candidates_per_task": 1.0,
+        "uninformed_selection_accuracy": 1.0
+      },
+      "model": null,
+      "detail": {
+        "oracle_rows": [
+          {
+            "task_id": "t01",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t02",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t03",
+            "capability": "get_item",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t04",
+            "capability": "list_skills",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t05",
+            "capability": "find_projects",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t06",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t07",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t08",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t09",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t10",
+            "capability": "find_projects",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t11",
+            "capability": "get_item",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t12",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t13",
+            "capability": "find_projects",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t14",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t15",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t16",
+            "capability": "list_skills",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t17",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t18",
+            "capability": "find_projects",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t19",
+            "capability": "get_item",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t20",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t21",
+            "capability": "find_projects",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t22",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t23",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t24",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t25",
+            "capability": "get_item",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t26",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t27",
+            "capability": "find_projects",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t28",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t29",
+            "capability": "get_item",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t30",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t31",
+            "capability": "list_skills",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t32",
+            "capability": "find_projects",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t33",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t34",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t35",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t36",
+            "capability": "find_projects",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t37",
+            "capability": "get_item",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t38",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t39",
+            "capability": "find_projects",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          },
+          {
+            "task_id": "t40",
+            "capability": "search",
+            "expressible_exactly": true,
+            "arguments_supported": true,
+            "candidate_tools": 1,
+            "selection_difficulty": 1.0
+          }
+        ],
+        "model_rows": null
+      }
+    }
+  },
+  "conclusion_inputs": {
+    "schema_token_ratio_fine_vs_best": 0.827,
+    "exact_expressible_best": 1.0,
+    "exact_expressible_coarse": 0.775,
+    "exact_expressible_fine": 0.775
+  }
+}

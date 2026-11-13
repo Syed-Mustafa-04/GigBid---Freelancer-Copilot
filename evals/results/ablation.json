@@ -1,0 +1,178 @@
+{
+  "generated_at": "2026-11-15T12:15:55.802376+00:00",
+  "variant": "v4_outcome",
+  "n_jobs": 60,
+  "k": 5,
+  "embedding_backend": "local",
+  "results": [
+    {
+      "ablation": "shipped",
+      "description": "The configured pipeline, unmodified",
+      "removes": "nothing (baseline)",
+      "n": 60,
+      "recall@5": 0.4867,
+      "ndcg@10": 0.504,
+      "mrr": 0.8153,
+      "project_hit@5": 1.0,
+      "latency": {
+        "n": 60,
+        "mean_s": 0.3082,
+        "p50_s": 0.3115,
+        "p95_s": 0.3937,
+        "p99_s": 0.4141,
+        "max_s": 0.4192
+      }
+    },
+    {
+      "ablation": "no_lexical",
+      "description": "Dense retrieval only",
+      "removes": "the BM25 channel",
+      "n": 60,
+      "recall@5": 0.57,
+      "ndcg@10": 0.5644,
+      "mrr": 0.7869,
+      "project_hit@5": 1.0,
+      "latency": {
+        "n": 60,
+        "mean_s": 0.2445,
+        "p50_s": 0.2482,
+        "p95_s": 0.3408,
+        "p99_s": 0.3459,
+        "max_s": 0.3506
+      },
+      "delta_vs_shipped": {
+        "recall@5": 0.0833,
+        "ndcg@10": 0.0604,
+        "project_hit@5": 0.0,
+        "latency_p95_delta_ms": -52.9
+      },
+      "verdict": "load-bearing"
+    },
+    {
+      "ablation": "no_dense",
+      "description": "BM25 only",
+      "removes": "the dense channel",
+      "n": 60,
+      "recall@5": 0.37,
+      "ndcg@10": 0.3604,
+      "mrr": 0.875,
+      "project_hit@5": 1.0,
+      "latency": {
+        "n": 60,
+        "mean_s": 0.0673,
+        "p50_s": 0.0625,
+        "p95_s": 0.1048,
+        "p99_s": 0.1218,
+        "max_s": 0.1576
+      },
+      "delta_vs_shipped": {
+        "recall@5": -0.1167,
+        "ndcg@10": -0.1436,
+        "project_hit@5": 0.0,
+        "latency_p95_delta_ms": -288.9
+      },
+      "verdict": "load-bearing"
+    },
+    {
+      "ablation": "no_rrf",
+      "description": "Concatenate channels instead of rank fusion",
+      "removes": "reciprocal rank fusion",
+      "n": 60,
+      "recall@5": 0.5,
+      "ndcg@10": 0.4526,
+      "mrr": 0.7039,
+      "project_hit@5": 0.9833,
+      "latency": {
+        "n": 60,
+        "mean_s": 0.3193,
+        "p50_s": 0.3176,
+        "p95_s": 0.4815,
+        "p99_s": 0.4893,
+        "max_s": 0.5503
+      },
+      "delta_vs_shipped": {
+        "recall@5": 0.0133,
+        "ndcg@10": -0.0514,
+        "project_hit@5": -0.0167,
+        "latency_p95_delta_ms": 87.8
+      },
+      "verdict": "load-bearing"
+    },
+    {
+      "ablation": "no_context",
+      "description": "Embed chunks without their generated context line",
+      "removes": "contextual prefixes",
+      "n": 60,
+      "recall@5": 0.3933,
+      "ndcg@10": 0.4524,
+      "mrr": 0.8583,
+      "project_hit@5": 1.0,
+      "latency": {
+        "n": 60,
+        "mean_s": 0.3788,
+        "p50_s": 0.3831,
+        "p95_s": 0.4803,
+        "p99_s": 0.4836,
+        "max_s": 0.493
+      },
+      "delta_vs_shipped": {
+        "recall@5": -0.0934,
+        "ndcg@10": -0.0516,
+        "project_hit@5": 0.0,
+        "latency_p95_delta_ms": 86.6
+      },
+      "verdict": "load-bearing"
+    },
+    {
+      "ablation": "no_rerank",
+      "description": "Skip the cross-encoder",
+      "removes": "reranking",
+      "n": 60,
+      "recall@5": 0.4867,
+      "ndcg@10": 0.504,
+      "mrr": 0.8153,
+      "project_hit@5": 1.0,
+      "latency": {
+        "n": 60,
+        "mean_s": 0.3723,
+        "p50_s": 0.3821,
+        "p95_s": 0.4599,
+        "p99_s": 0.4718,
+        "max_s": 0.4728
+      },
+      "delta_vs_shipped": {
+        "recall@5": 0.0,
+        "ndcg@10": 0.0,
+        "project_hit@5": 0.0,
+        "latency_p95_delta_ms": 66.2
+      },
+      "verdict": "no measurable effect on this corpus"
+    },
+    {
+      "ablation": "no_persona",
+      "description": "Search all personas, not just the user's",
+      "removes": "the tenancy filter",
+      "n": 60,
+      "recall@5": 0.3933,
+      "ndcg@10": 0.4344,
+      "mrr": 0.7986,
+      "project_hit@5": 1.0,
+      "latency": {
+        "n": 60,
+        "mean_s": 0.3714,
+        "p50_s": 0.377,
+        "p95_s": 0.477,
+        "p99_s": 0.4834,
+        "max_s": 0.5193
+      },
+      "delta_vs_shipped": {
+        "recall@5": -0.0934,
+        "ndcg@10": -0.0696,
+        "project_hit@5": 0.0,
+        "latency_p95_delta_ms": 83.3
+      },
+      "verdict": "load-bearing"
+    }
+  ],
+  "reading_guide": "Each row removes exactly one component from the shipped pipeline. A large negative delta means the component is doing real work; a delta near zero means it is decoration on this corpus and could be deleted for the latency. Deltas are against the 'shipped' row, not against each other."
+}

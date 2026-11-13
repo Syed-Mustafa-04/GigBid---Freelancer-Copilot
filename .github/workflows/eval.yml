@@ -1,0 +1,94 @@
+name: Evaluation gates
+
+# Quality gates on every pull request. The thresholds below are deliberately
+# the ones that protect the user rather than the ones that look good:
+# unsupported claims must not rise, scam recall must not fall, and the
+# injection defence must not regress.
+#
+# They run on the offline providers, so they gate the DETERMINISTIC parts of
+# the system - rules, thresholds, retrieval, guardrails. Model-quality numbers
+# need a key and are produced by the nightly job instead.
+
+on:
+  pull_request:
+  schedule:
+    - cron: '0 3 * * *'   # nightly, with a key, for the model-dependent numbers
+  workflow_dispatch:
+
+env:
+  EMBEDDING_BACKEND: hash
+  GIGBID__MODELS__RERANKER__BACKEND: none
+  APP_SECRET_KEY: ci-secret-not-for-production
+
+jobs:
+  smoke-eval:
+    name: 30-job smoke evaluation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12', cache: pip }
+
+      - name: Install and seed
+        run: |
+          python -m pip install --upgrade pip && pip install -e ".[dev]"
+          python -m scripts.generate_corpus --seed 20261115
+          python -m scripts.generate_jobs --seed 20261115
+          python scripts/write_prompts.py
+
+      - name: Injection defence
+        run: python -m evals.runners.injection_eval
+
+      - name: Decision quality (30 jobs)
+        run: python -m evals.runners.decision_eval --limit 30
+
+      - name: Tool granularity
+        run: python -m evals.runners.tool_granularity
+
+      - name: Enforce thresholds
+        run: python -m evals.runners.gate
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-results
+          path: evals/results/
+          retention-days: 30
+
+  full-eval:
+    name: Full evaluation (nightly, real models)
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      EMBEDDING_BACKEND: local
+      OPEN_LLM_BASE_URL: ${{ secrets.OPEN_LLM_BASE_URL }}
+      OPEN_LLM_API_KEY: ${{ secrets.OPEN_LLM_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12', cache: pip }
+
+      - name: Install and seed
+        run: |
+          python -m pip install --upgrade pip && pip install -e ".[dev,embed]"
+          python -m scripts.generate_corpus --seed 20261115
+          python -m scripts.generate_jobs --seed 20261115
+          python scripts/write_prompts.py
+          python scripts/download_models.py
+
+      - name: RAG variant comparison
+        run: python -m evals.runners.rag_eval --limit 90 --k 5
+
+      - name: Decision quality
+        run: python -m evals.runners.decision_eval --limit 120
+
+      - name: Architecture comparison
+        run: python -m evals.runners.multi_agent_comparison --limit 30
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: full-eval-results
+          path: evals/results/
+          retention-days: 90

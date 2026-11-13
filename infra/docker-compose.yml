@@ -1,0 +1,178 @@
+# `docker compose up` starts everything: web, API, worker, GigSim, Postgres,
+# Redis, and the three MCP servers over Streamable HTTP.
+#
+# Secrets come from .env only. Nothing here contains a real value, and .env is
+# in .gitignore.
+#
+# Ollama is included as an optional profile for a fully local open-model run:
+#   docker compose --profile local-models up
+
+name: gigbid
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-gigbid}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gigbid}
+      POSTGRES_DB: ${POSTGRES_DB:-gigbid}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gigbid} -d ${POSTGRES_DB:-gigbid}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  gigsim:
+    build:
+      context: ..
+      dockerfile: infra/docker/Dockerfile.gigsim
+    image: gigbid-gigsim:latest
+    environment:
+      GIGSIM_API_TOKEN: ${GIGSIM_API_TOKEN:-gigsim-dev-token}
+      GIGSIM_FAULT_RATE: ${GIGSIM_FAULT_RATE:-0.03}
+      GIGSIM_RATE_LIMIT_RPM: ${GIGSIM_RATE_LIMIT_RPM:-60}
+      GIGSIM_SEED: ${GIGSIM_SEED:-20261115}
+    ports:
+      - "8081:8081"
+
+  api:
+    build:
+      context: ..
+      dockerfile: infra/docker/Dockerfile.api
+    image: gigbid-api:latest
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      gigsim: { condition: service_started }
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      APP_SECRET_KEY: ${APP_SECRET_KEY:?set APP_SECRET_KEY in .env}
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-gigbid}:${POSTGRES_PASSWORD:-gigbid}@postgres:5432/${POSTGRES_DB:-gigbid}
+      CHECKPOINT_DATABASE_URL: postgresql://${POSTGRES_USER:-gigbid}:${POSTGRES_PASSWORD:-gigbid}@postgres:5432/${POSTGRES_DB:-gigbid}
+      REDIS_URL: redis://redis:6379/0
+      MARKETPLACE_MODE: ${MARKETPLACE_MODE:-gigsim}
+      GIGSIM_BASE_URL: http://gigsim:8081
+      GIGSIM_API_TOKEN: ${GIGSIM_API_TOKEN:-gigsim-dev-token}
+      MODEL_PROFILE: ${MODEL_PROFILE:-open}
+      OPEN_LLM_BASE_URL: ${OPEN_LLM_BASE_URL:-}
+      OPEN_LLM_API_KEY: ${OPEN_LLM_API_KEY:-}
+      OPEN_LLM_FALLBACK_BASE_URL: ${OPEN_LLM_FALLBACK_BASE_URL:-}
+      OPEN_LLM_FALLBACK_API_KEY: ${OPEN_LLM_FALLBACK_API_KEY:-}
+      EMBEDDING_BACKEND: ${EMBEDDING_BACKEND:-local}
+      TOKEN_ENCRYPTION_KEY: ${TOKEN_ENCRYPTION_KEY:-}
+      UPWORK_MCP_URL: ${UPWORK_MCP_URL:-https://mcp.upwork.com/mcp}
+      UPWORK_CLIENT_ID: ${UPWORK_CLIENT_ID:-}
+      UPWORK_CLIENT_SECRET: ${UPWORK_CLIENT_SECRET:-}
+      LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY:-}
+      LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY:-}
+      LANGFUSE_HOST: ${LANGFUSE_HOST:-https://cloud.langfuse.com}
+      REVIEWER_EMAIL: ${REVIEWER_EMAIL:-reviewer@gigbid.app}
+      REVIEWER_PASSWORD: ${REVIEWER_PASSWORD:?set REVIEWER_PASSWORD in .env}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+    ports:
+      - "8000:8000"
+
+  worker:
+    build:
+      context: ..
+      dockerfile: infra/docker/Dockerfile.api
+    image: gigbid-api:latest
+    depends_on:
+      api: { condition: service_started }
+      redis: { condition: service_healthy }
+    command: ["python", "-m", "worker.tasks"]
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-gigbid}:${POSTGRES_PASSWORD:-gigbid}@postgres:5432/${POSTGRES_DB:-gigbid}
+      CHECKPOINT_DATABASE_URL: postgresql://${POSTGRES_USER:-gigbid}:${POSTGRES_PASSWORD:-gigbid}@postgres:5432/${POSTGRES_DB:-gigbid}
+      REDIS_URL: redis://redis:6379/0
+      GIGSIM_BASE_URL: http://gigsim:8081
+      GIGSIM_API_TOKEN: ${GIGSIM_API_TOKEN:-gigsim-dev-token}
+      MARKETPLACE_MODE: ${MARKETPLACE_MODE:-gigsim}
+      MODEL_PROFILE: ${MODEL_PROFILE:-open}
+      OPEN_LLM_BASE_URL: ${OPEN_LLM_BASE_URL:-}
+      OPEN_LLM_API_KEY: ${OPEN_LLM_API_KEY:-}
+      EMBEDDING_BACKEND: ${EMBEDDING_BACKEND:-local}
+      APP_SECRET_KEY: ${APP_SECRET_KEY:?set APP_SECRET_KEY in .env}
+
+  # --- MCP servers over Streamable HTTP ---------------------------------
+  # The graph talks to these in-process by default; exposing them here is what
+  # lets another host (Claude Desktop, Cursor, MCP Inspector) connect.
+  mcp-portfolio:
+    image: gigbid-api:latest
+    depends_on:
+      api: { condition: service_started }
+    command: ["python", "-m", "mcp_servers.portfolio.server"]
+    environment:
+      GIGBID_MCP_TRANSPORT: streamable-http
+      GIGBID_PORTFOLIO_PORT: "8101"
+      GIGBID_TOOLSET: ${GIGBID_TOOLSET:-best}
+      EMBEDDING_BACKEND: ${EMBEDDING_BACKEND:-local}
+    ports:
+      - "8101:8101"
+
+  mcp-marketplace:
+    image: gigbid-api:latest
+    depends_on:
+      gigsim: { condition: service_started }
+    command: ["python", "-m", "mcp_servers.marketplace.server"]
+    environment:
+      GIGBID_MCP_TRANSPORT: streamable-http
+      GIGBID_MARKETPLACE_PORT: "8102"
+      GIGSIM_BASE_URL: http://gigsim:8081
+      GIGSIM_API_TOKEN: ${GIGSIM_API_TOKEN:-gigsim-dev-token}
+      MARKETPLACE_MODE: ${MARKETPLACE_MODE:-gigsim}
+    ports:
+      - "8102:8102"
+
+  mcp-workspace:
+    image: gigbid-api:latest
+    command: ["python", "-m", "mcp_servers.workspace.server"]
+    environment:
+      GIGBID_MCP_TRANSPORT: streamable-http
+      GIGBID_WORKSPACE_PORT: "8103"
+      GIGBID_WORKSPACE_BACKEND: ${GIGBID_WORKSPACE_BACKEND:-mock}
+    ports:
+      - "8103:8103"
+
+  web:
+    build:
+      context: ..
+      dockerfile: infra/docker/Dockerfile.web
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    image: gigbid-web:latest
+    depends_on:
+      api: { condition: service_started }
+    ports:
+      - "3000:3000"
+
+  # Optional: fully local open models, no hosted provider at all.
+  ollama:
+    image: ollama/ollama:latest
+    profiles: ["local-models"]
+    volumes:
+      - ollamadata:/root/.ollama
+    ports:
+      - "11434:11434"
+
+volumes:
+  pgdata:
+  redisdata:
+  ollamadata:
