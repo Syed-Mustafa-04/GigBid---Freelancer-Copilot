@@ -71,6 +71,27 @@ retry attempts, so evaluation runs silently lost rows rather than running
 slower. Now a typed `ProviderRateLimited` that honours `Retry-After` and does
 not consume an attempt.
 
+**9. A documentation file asserting what an adjacent log did not contain.**
+The worst error in this project, and mine rather than the assistant's. I wrote
+`evals/results/traces/README.md` describing a live run as showing "fit 0.95,
+six extracted requirements, a bid priced inside the market band". The log it
+pointed at stops at the Risk Assessor after fourteen HTTP 429s and contains
+none of those lines. I had seen that output in an earlier run, the file was
+overwritten by a later throttled one, and I wrote the description from memory
+without re-opening it.
+
+This is precisely the failure the project argues against: a claim that *looks*
+checkable because it sits next to a file, in the one document a marker would
+open to verify the others. It was caught in review, not by me. The README now
+quotes both logs verbatim and states plainly that no committed trace shows a
+real-model draft passing through claim verification.
+
+**10. `*.log` in .gitignore silently excluding the committed evidence.** Found
+in the same pass. The traces the report cites were not in the repository at
+all — a clone would have had the README and none of the files it describes.
+Fixed with an explicit negation, and every cited path is now checked against
+`git ls-files` by a script rather than by eye.
+
 ## The finding that changed the design
 
 The most important correction was not a bug.

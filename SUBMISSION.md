@@ -77,7 +77,14 @@ Everything is in `evals/results/injection_defence.json`.
 | Injection defence, 4 sets + trained-classifier control | **real** | `injection_defence.json` |
 | Tool granularity, 40 tasks | **real** (oracle scoring) | `tool_granularity.json` |
 | Cross-encoder latency (53.6 s/job on CPU) | **real** | `timing.log`, ADR 0004 |
-| End-to-end on a live model | **demonstrated** | `demo.log` |
+| End-to-end control flow (approval gate, exactly-once) | **real** | `traces/demo_offline_full_path.log` |
+| Live models under free-tier throttling | **real** | `traces/demo_live_run.log` |
+
+**Not evidenced by any committed trace:** a real-model draft passing through
+claim verification. A development run produced one (184 words reduced to 152,
+one unsupported claim removed) but the log was overwritten before it was
+committed, so the claim is not checkable and is not made in the report. One
+command inside quota closes it - see `evals/results/traces/README.md`.
 
 ## What is not done, and why
 

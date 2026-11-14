@@ -3,49 +3,92 @@
 Readable end-to-end runs, kept so a claim in the report can be checked against
 a file rather than taken on trust.
 
-| File | Provider | What it shows |
-| --- | --- | --- |
-| `demo_offline_full_path.log` | **deterministic offline** | The complete path: analysis, bid decision, pricing, drafting, claim verification, two bounded Critic revisions, compliance, the human approval gate, submission, and the exactly-once replay check. |
-| `demo_live_run.log` | **live model (Groq)** | A run against real models, truncated by free-tier rate limiting. Shows the real-provider failure path. |
+**Every line below was verified against the files on disk.** An earlier version
+of this README described a live run that had been overwritten, and asserted
+content the committed log does not contain. That is recorded in the failure
+taxonomy as the same class of mistake the project is about: an unverified claim
+that looked checkable because it sat next to a file.
 
-## Why the full path trace uses the offline provider
+---
 
-Not because the system cannot do it with a real model - it can, and the live
-log shows the same nodes producing real analyses (fit 0.95, six extracted
-requirements, a bid priced inside the market band). It is because the Groq free
-tier's per-minute token ceiling is below what the three-way analysis fan-out
-plus a draft needs, so a complete single-process run hits 429s partway through.
+## `demo_offline_full_path.log` — deterministic provider
 
-The trade is deliberate: a **complete** trace of the structural guarantees
-beats a **partial** trace with better prose in it. What matters in this file is
-the control flow, and that is identical under either provider:
+The only trace that covers the **complete** path. Verbatim:
 
 ```
-decide     DECISION: bid ($52.47/Connect)
-pricing    bid $68 (band $41-$89)
-writer     draft, revision 0
-critic     sent back              <- bounded loop, revision 1
-critic     sent back              <- revision 2, the configured maximum
-compliance clear
+analyst       0 requirements extracted
+fit_matcher   fit 0.63, coverage 0%
+risk_assessor risk 0.09
+decide        DECISION: bid ($52.47/Connect)
+pricing       bid $68 (band $41-$89)
+writer        draft 19 words, revision 0
+verify_claims draft 19 words, revision 0; claims: 0 unsupported -> 0
+critic        critic sent back
+writer        draft 19 words, revision 1
+critic        critic sent back
+writer        draft 0 words, revision 2
+critic        critic sent back
+compliance    compliance clear
 >>> STOPPED FOR HUMAN APPROVAL - nothing has been sent <<<
 cost       : 8 Connects (irreversible)
 idempotency: 2abe3820c1d4ed5b40a2088d...
+budget     : {'tokens_used': 22481, 'cost_usd': 0.00253, 'steps': 15}
 APPROVING -> submitted prop_000001, 8 Connects
 connects before 120 / after 112 / spent 8
-replayed the same approval -> no further spend. Correct.
+replayed the same approval a second time -> no further spend. Correct.
 ```
 
-The proposal **text** in this file is placeholder - the offline provider writes
-no real prose, which is why the draft is 19 words and the claim counts are
-zero. Read it for the control flow, not the writing. For real drafting quality,
-see the live log and `evals/results/rag_variants.json`.
+**What this evidences** — the structural guarantees, end to end:
 
-To regenerate either:
+| Property | Evidence in the file |
+| --- | --- |
+| Bounded critique loop | Critic sends back exactly twice, the configured `max_revisions`, then proceeds |
+| Approval gate | Execution stops; nothing is sent before a human answers |
+| Dry-run preview | The exact Connects cost and idempotency key are shown before approval |
+| Exactly-once submission | 120 → 112 Connects; a replayed approval spends nothing further |
+| Step budget | 15 steps against the 40 allowed |
+
+**What this does NOT evidence.** The proposal *text* is placeholder: the
+offline provider writes no real prose, which is why the draft is 19 words, the
+Analyst extracts 0 requirements, and claim counts are `0 unsupported -> 0`.
+`claims: 0 -> 0` here means **there were no claims to check**, not that a real
+draft passed verification. The `tokens_used` and `cost_usd` figures are the
+stub's accounting, not a model's. Read this file for control flow only.
+
+## `demo_live_run.log` — live models (Groq)
+
+Reaches `risk_assessor risk 0.10` and stops. It contains **14 HTTP 429
+responses** and no Writer, verifier, Critic or approval line. The Groq free
+tier's per-minute token ceiling is below what the three-way analysis fan-out
+plus a draft requires in a single process.
+
+**What this evidences**: the rate-limit handling and the degraded path under a
+real provider. Nothing about draft quality.
+
+## What is not evidenced by any committed trace
+
+**There is no committed trace of a real-model draft passing through claim
+verification.** A run earlier in development did produce one — a 184-word draft
+reduced to 152 with one unsupported claim removed — but that log was
+overwritten by a later throttled run before it was committed, so the claim is
+no longer checkable and is not made anywhere in the report.
+
+Closing this needs one command inside quota, not a rebuild:
 
 ```bash
-# full path, deterministic, ~60s, no API key needed
+EMBEDDING_BACKEND=local python -m scripts.demo_one_job > evals/results/traces/demo_live_full_path.log 2>&1
+```
+
+Run it one job at a time, with nothing else hitting the provider.
+
+## Regenerating
+
+```bash
+# complete path, deterministic, ~60s, no API key required
 EMBEDDING_BACKEND=hash OPEN_LLM_API_KEY="" python -m scripts.demo_one_job
 
-# live models, needs quota
+# live models, needs quota headroom
 EMBEDDING_BACKEND=local python -m scripts.demo_one_job
 ```
+
+GigSim must be running (`make gigsim`).

@@ -38,5 +38,9 @@ logs/
 
 # Local run artefacts
 *.log
+# ...but committed evidence is the exception. Every number in the report has
+# to trace to a file in the repository, and `*.log` was quietly excluding the
+# traces the report cites - the README described files a clone would not have.
+!evals/results/traces/*.log
 demo_checkpoints.sqlite
 ci.sqlite

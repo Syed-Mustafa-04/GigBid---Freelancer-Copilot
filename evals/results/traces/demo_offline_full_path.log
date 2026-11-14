@@ -1,0 +1,68 @@
+
+========================================================================
+GigBid - one job, inbox to submitted
+========================================================================
+LLM provider: OFFLINE deterministic stub (no OPEN_LLM_API_KEY set). The graph runs end to end but numbers are not measurements.
+GigSim: 98 visible jobs, 140 clients
+
+========================================================================
+JOB  job_925968a94b
+Retrieval Augmented Generation - healthcare engagement
+========================================================================
+budget 3210.0-5020.0 hourly | 8 Connects | 45 competing
+
+--- agents ---
+C:\Users\SyedMuhammadMustafa\Desktop\Notes\Personal\SEM 7\Agentic AI\A2\gigbid\.venv\Lib\site-packages\pydantic_settings\sources\utils.py:51: IncompleteFieldDefinitionWarning: Field 'lifespan' has an incomplete definition: its annotation contains an unresolved forward reference, so settings sources may fail to correctly resolve its value. Call `model_rebuild()` on the model where the field is defined, once all the referenced types are defined.
+  warnings.warn(  # noqa: B028  (called from many sources at differing depths, so no stacklevel is correct)
+  analyst              0 requirements extracted
+  fit_matcher          fit 0.63, coverage 0%
+HTTP Request: GET http://localhost:8081/clients/cl_cb88c0a26c/history "HTTP/1.1 200 OK"
+  risk_assessor        risk 0.09
+  join                 (no output)
+  decide               DECISION: bid ($52.47/Connect)
+HTTP Request: GET http://localhost:8081/market/stats?skill=retrieval+augmented+generation "HTTP/1.1 200 OK"
+HTTP Request: GET http://localhost:8081/connects/balance?freelancer_id=p_ai_engineer "HTTP/1.1 200 OK"
+  pricing              bid $68 (band $41-$89)
+  writer               draft 19 words, revision 0
+  verify_claims        draft 19 words, revision 0; claims: 0 unsupported -> 0
+  critic               critic sent back
+  writer               draft 19 words, revision 1
+  verify_claims        draft 19 words, revision 1; claims: 0 unsupported -> 0
+  critic               critic sent back
+  writer               draft 0 words, revision 2
+  verify_claims        draft 0 words, revision 2; claims: 0 unsupported -> 0
+  critic               critic sent back
+  compliance           compliance clear
+HTTP Request: POST http://localhost:8081/proposals "HTTP/1.1 201 Created"
+
+========================================================================
+STOPPED FOR HUMAN APPROVAL - nothing has been sent
+========================================================================
+
+
+evidence cited: ev_c156510f0f, ev_db5c87a23a, ev_22eedac000
+claims: 0 supported, 0 removed by the verifier
+
+would call : create_proposal_draft -> submit_proposal on marketplace
+cost       : 8 Connects (irreversible)
+idempotency: 2abe3820c1d4ed5b40a2088d…
+budget     : {'tokens_used': 22481, 'cost_usd': 0.00253, 'steps': 15}
+
+========================================================================
+APPROVING
+========================================================================
+HTTP Request: GET http://localhost:8081/connects/balance "HTTP/1.1 200 OK"
+HTTP Request: POST http://localhost:8081/proposals "HTTP/1.1 201 Created"
+HTTP Request: POST http://localhost:8081/proposals "HTTP/1.1 201 Created"
+HTTP Request: POST http://localhost:8081/proposals/submit "HTTP/1.1 200 OK"
+submitted  : prop_000001
+connects   : 8
+HTTP Request: GET http://localhost:8081/connects/balance "HTTP/1.1 200 OK"
+
+========================================================================
+EXACTLY-ONCE CHECK
+========================================================================
+connects before approval : 120
+connects after approval  : 112
+spent                    : 8
+replayed the same approval a second time -> no further spend. Correct.

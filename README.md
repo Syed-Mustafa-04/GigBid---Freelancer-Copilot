@@ -209,9 +209,12 @@ the trade: more tokens per call, zero selection ambiguity.
 ### C — Is the multi-agent design worth it?
 
 Single ReAct agent vs a supervisor topology vs the hand-built graph, on the same
-jobs. → [`evals/results/multi_agent_comparison.json`](evals/results/multi_agent_comparison.json)
+jobs. The runner is `evals/runners/multi_agent_comparison.py`; **the accuracy
+and cost columns have not been run** — the free-tier quota was exhausted during
+evaluation, and no numbers are quoted in their place.
 
-The structural differences are the finding, and they are not close:
+The structural differences below are properties of the code, not measurements,
+and hold regardless of the unrun numbers:
 
 | | ReAct | Supervisor | **This graph** |
 | --- | --- | --- | --- |
@@ -258,8 +261,10 @@ client replied, with a two-proportion z-test and Wilson intervals. GigSim holds
 hidden client preferences no GigBid component can observe, which makes reply
 rate the only arbiter in the system that is not marking its own homework.
 
-→ [`docs/EXTENSION.md`](docs/EXTENSION.md) ·
-[`evals/results/proposal_experiment.json`](evals/results/proposal_experiment.json)
+→ [`docs/EXTENSION.md`](docs/EXTENSION.md). The runner is
+`evals/runners/proposal_experiment.py`; **it has not been run** — both arms
+need a live model, and the quota ran out. Design and statistics are in place;
+the result is not.
 
 ---
 

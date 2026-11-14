@@ -5,7 +5,10 @@ whether a simulated client actually replied, with a significance test on the
 difference.
 
 **Run it:** `python -m evals.runners.proposal_experiment --limit 40`
-**Results:** `evals/results/proposal_experiment.json`
+**Results:** `evals/results/proposal_experiment.json` — **not yet produced.**
+Both arms need a live model and the free-tier quota was exhausted during
+evaluation. The runner, the statistics and the design below are complete;
+the numbers are not, and none are estimated in their place.
 
 ---
 
