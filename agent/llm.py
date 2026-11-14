@@ -529,10 +529,19 @@ class LLMClient:
             if attempt >= max_attempts:
                 break
             # Pace before sending, not after being refused.
+            #
+            # Reserve the prompt plus a FRACTION of the output allowance, not
+            # the whole of it. `max_tokens` is a ceiling the model almost never
+            # reaches - a 1,600-token allowance typically produces ~300 - and
+            # booking the ceiling for three parallel analyses reserved more
+            # than the entire per-minute budget, so the fan-out serialised
+            # behind a 60-second wait. The reservation is corrected to actual
+            # usage as soon as the response arrives.
             if provider_name != "offline":
-                await self._bucket.acquire(
-                    estimate_tokens(json.dumps(messages)) + max_tokens
+                reservation = estimate_tokens(json.dumps(messages)) + max(
+                    128, int(max_tokens * 0.3)
                 )
+                await self._bucket.acquire(reservation)
             started = time.perf_counter()
             try:
                 text, usage = await provider.complete(
@@ -544,9 +553,7 @@ class LLMClient:
                 )
                 latency = time.perf_counter() - started
                 if provider_name != "offline":
-                    self._bucket.record_actual(
-                        estimate_tokens(json.dumps(messages)) + max_tokens, usage.total
-                    )
+                    self._bucket.record_actual(reservation, usage.total)
                 result = LLMResult(
                     text=text,
                     model=model,

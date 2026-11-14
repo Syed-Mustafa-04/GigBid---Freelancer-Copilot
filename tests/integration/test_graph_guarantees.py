@@ -276,13 +276,22 @@ class TestFailedAnalysisIsNotASkip:
     """
 
     async def test_missing_analyses_route_to_needs_attention(self, graph, monkeypatch):
-        from agent.nodes import analyst, fit_matcher
+        """Simulate the real failure: the provider is unreachable.
 
-        async def fail(*args, **kwargs):
+        Patching the node functions does not work - the graph captures node
+        callables at BUILD time, so a patch applied afterwards is ignored and
+        the test passes for the wrong reason. Failing the LLM client instead
+        reproduces the actual outage: every structured call raises, the
+        Analyst and Fit Matcher produce nothing, and the Risk Assessor (which
+        catches and degrades) still returns a report.
+        """
+        from agent.llm import LLMClient
+
+        async def outage(*args, **kwargs):
             raise RuntimeError("simulated provider outage")
 
-        monkeypatch.setattr(analyst, "analyse_job", fail)
-        monkeypatch.setattr(fit_matcher, "match_fit", fail)
+        monkeypatch.setattr(LLMClient, "structured", outage)
+        monkeypatch.setattr(LLMClient, "complete", outage)
 
         job, label = job_of_family("genuine")
         final, _, _ = await run_job(graph, job, label)
