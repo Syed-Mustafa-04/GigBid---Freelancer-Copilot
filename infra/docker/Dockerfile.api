@@ -13,7 +13,23 @@ RUN apt-get update \
 
 COPY pyproject.toml ./
 # Install dependencies in their own layer so code changes do not re-resolve.
-RUN pip install --upgrade pip && pip install -e ".[embed]" || pip install -e .
+#
+# The stub directories are load-bearing. `pip install -e .` runs setuptools'
+# egg_info, which fails with "package directory 'agent' does not exist" unless
+# every entry in pyproject's `packages` list is present. Only pyproject.toml
+# has been copied at this point, so without the stubs this layer cannot build
+# at all -- and because the fallback after `||` is the same editable install,
+# it fails too and the error reads as a dependency problem rather than a
+# missing directory.
+#
+# The real source is copied over the stubs below. The install is editable, so
+# it resolves against whatever is on disk at run time, and the dependency
+# resolution stays in its own cached layer.
+# Written on one line on purpose. This file is CRLF, and a backslash
+# continuation followed by CRLF escapes the carriage return rather than
+# continuing the line, so the next line is parsed as an instruction and the
+# build dies with "unknown instruction: &&".
+RUN mkdir -p agent rag gigsim mcp_servers worker evals apps && pip install --upgrade pip && (pip install -e ".[embed]" || pip install -e .)
 
 COPY agent/ ./agent/
 COPY rag/ ./rag/
@@ -24,6 +40,22 @@ COPY evals/ ./evals/
 COPY gigsim/ ./gigsim/
 COPY scripts/ ./scripts/
 COPY data/ ./data/
+
+# The index is baked into the image, so the backend that builds it must be the
+# backend that queries it.
+#
+# Without this ARG the index was always built with the code default (`local`,
+# bge-small) while the running container took its backend from an environment
+# variable. A deployment setting EMBEDDING_BACKEND=hash -- which a 512 MB host
+# must, since torch will not fit -- then queried a bge-built index with hash
+# vectors. Both are 384-dimensional, so nothing raised; retrieval just returned
+# noise. CorpusIndex.load now refuses that combination outright, and this makes
+# sure it does not arise: Render passes service environment variables to Docker
+# builds as build args, so the same value reaches both sides.
+#
+# Changing EMBEDDING_BACKEND therefore requires a rebuild, not just a restart.
+ARG EMBEDDING_BACKEND=local
+ENV EMBEDDING_BACKEND=${EMBEDDING_BACKEND}
 
 # Pre-build the vector index at image build time: a cold first request that
 # spends 110s embedding the corpus looks like an outage to the user.

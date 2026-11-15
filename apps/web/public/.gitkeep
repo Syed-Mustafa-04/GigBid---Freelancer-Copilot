@@ -1,0 +1,4 @@
+Next.js serves static assets from this directory, and infra/docker/Dockerfile.web
+copies it into the runtime image. Docker COPY fails the build outright when the
+source path does not exist, so this directory has to be present in the repo even
+while it is empty. Deleting this file breaks the web image.

@@ -65,6 +65,14 @@ class Hit:
     components: dict[str, float] = field(default_factory=dict)
 
 
+class IndexEmbedderMismatch(RuntimeError):
+    """Raised when a persisted index was built by a different embedder.
+
+    A distinct type so a caller can tell this apart from a corrupt or missing
+    index: the remedy is a rebuild or a configuration change, not recovery.
+    """
+
+
 class VectorStore:
     """Dense store: a float32 matrix plus aligned chunk metadata."""
 
@@ -334,6 +342,36 @@ class CorpusIndex:
     @classmethod
     def load(cls, directory: Path, embedder: Embedder) -> CorpusIndex:
         index = cls(embedder)
+
+        # Refuse an index built by a different embedder.
+        #
+        # This check exists because the failure it prevents is silent. The hash
+        # embedder and bge-small are both 384-dimensional, so loading a
+        # bge-built index and then embedding queries with the hash backend
+        # raises nothing at all: the vectors load, the query encodes, cosine
+        # similarity computes, and every result is meaningless. Retrieval
+        # quietly returns noise and the proposal writer grounds its claims in
+        # it.
+        #
+        # It is easy to reach. The Docker image bakes the index at build time
+        # and the backend is chosen by an environment variable at run time, so
+        # any deployment that sets EMBEDDING_BACKEND without rebuilding lands
+        # here. Better to refuse to start than to serve confident nonsense.
+        meta_path = directory / "meta.json"
+        if meta_path.exists():
+            with meta_path.open("r", encoding="utf-8") as handle:
+                meta = json.load(handle)
+            built_with = meta.get("embedder")
+            if built_with and built_with != embedder.name:
+                raise IndexEmbedderMismatch(
+                    f"This index was built with the {built_with!r} embedder but "
+                    f"{embedder.name!r} is configured now. Both may share a "
+                    f"dimension, so the mismatch would not otherwise be detected "
+                    f"and retrieval would silently return noise. Rebuild the "
+                    f"index with EMBEDDING_BACKEND={built_with}, or set "
+                    f"EMBEDDING_BACKEND={built_with} to use the existing one."
+                )
+
         matrix = np.load(directory / "vectors.npy")
         with (directory / "chunks.json").open("r", encoding="utf-8") as handle:
             chunks = [Chunk(**row) for row in json.load(handle)]
