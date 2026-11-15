@@ -25,6 +25,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 RESULTS = REPO / "evals" / "results"
 ADR = REPO / "docs" / "adr" / "0004-rag-variant.md"
+REPORT = REPO / "docs" / "RD_REPORT.md"
 
 # Table label -> key in the results file.
 VARIANTS = {
@@ -122,13 +123,51 @@ def main() -> int:
         if len(row) > 5 and (d := _num(row[5])) is not None:
             compare(row[0], "delta_recall", d, r["recall@5"] - abl["shipped"]["recall@5"], 0.0011)
 
+    # --- RD_REPORT tool-granularity table vs tool_granularity.json ----------
+    report = REPORT.read_text(encoding="utf-8")
+    tg = json.loads((RESULTS / "tool_granularity.json").read_text(encoding="utf-8"))["results"]
+    tg_rows = {
+        "`fine` — one tool per evidence type": "fine",
+        "`coarse` — broad tools with filters": "coarse",
+        "`best` — shipped": "best",
+    }
+    for row in _rows("| Tool set | Tools | Schema tokens |", report):
+        key = tg_rows.get(row[0].replace("—", "—"))
+        if key is None:
+            # fall back to a looser match on the backticked name
+            for label, k in tg_rows.items():
+                if label.split()[0] in row[0]:
+                    key = k
+                    break
+        if key is None or key not in tg:
+            continue
+        o = tg[key]["oracle"]
+        compare(f"tools:{key}", "n_tools", _num(row[1]), tg[key]["n_tools"], 0.5)
+        compare(f"tools:{key}", "schema_tokens", _num(row[2]), tg[key]["schema_tokens_per_call"], 0.5)
+        compare(f"tools:{key}", "expressible", _num(row[3]), o["exact_expressible_rate"], 0.006)
+        compare(f"tools:{key}", "arg_support", _num(row[4]), o["argument_support_rate"], 0.006)
+        compare(f"tools:{key}", "candidates", _num(row[5]), o["mean_candidates_per_task"], 0.006)
+        compare(f"tools:{key}", "uninformed", _num(row[6]), o["uninformed_selection_accuracy"], 0.006)
+
+    # --- the one number whose label does the work ---------------------------
+    inj = json.loads((RESULTS / "injection_defence.json").read_text(encoding="utf-8"))
+    checked += 1
+    if inj["layer_2_detection"]["held_out_detected"] != "0/8":
+        problems.append(
+            "injection  held_out_detected is no longer 0/8; every doc that calls "
+            "detection the wrong layer rests on it"
+        )
+    checked += 1
+    if inj["layer_4_capability_denial"]["blocked"] != 6:
+        problems.append("injection  layer 4 no longer blocks 6/6")
+
     print(f"checked {checked} cited numbers against evals/results/")
     if problems:
         print(f"\n{len(problems)} MISMATCH(ES):\n")
         for p in problems:
             print(" ", p)
         return 1
-    print("every number in ADR 0004 matches its artefact")
+    print("every cited number in ADR 0004 and RD_REPORT matches its artefact")
     return 0
 
 

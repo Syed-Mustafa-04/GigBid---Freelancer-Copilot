@@ -51,6 +51,14 @@ Three measurements, in this order:
 | 8 paraphrases, written blind | 2/8 | 2/8 |
 | **8 held-out attacks, never tuned against** | **0/8** | **0/8** |
 
+One number needs its label read carefully. `injection_defence.json` reports
+`paraphrase_detected: "8/8"` for the patterns, not the 2/8 above. Both are
+true of different scanners: 2/8 is what the patterns scored on the paraphrases
+**blind**, before class-level patterns were added in response; 8/8 is the
+current scanner on text it has now effectively been tuned against. The blind
+figure is the one that belongs in a generalisation row, and the file records
+both under `history` rather than quietly keeping the better one.
+
 The argument: an obvious objection to the first row collapsing to the third is
 "your regexes were bad". So run a model trained specifically for the task on
 the same text. It also scores zero. Prompt Guard is trained on jailbreaks
