@@ -105,35 +105,57 @@ class TokenBucket:
         self.rpm = max(1, requests_per_minute)
         self.tpm = max(1000, tokens_per_minute)
         self._requests: list[float] = []
-        self._tokens: list[tuple[float, int]] = []
+        # Each entry is a mutable [timestamp, tokens] cell. A caller holds its
+        # own cell and corrects that one, so corrections cannot land on another
+        # request's reservation. See `acquire`.
+        self._tokens: list[list[float]] = []
         self._lock = asyncio.Lock()
 
     def _prune(self, now: float) -> None:
         self._requests = [t for t in self._requests if now - t < 60.0]
-        self._tokens = [(t, n) for t, n in self._tokens if now - t < 60.0]
+        self._tokens = [cell for cell in self._tokens if now - cell[0] < 60.0]
 
-    async def acquire(self, estimated_tokens: int) -> None:
+    async def acquire(self, estimated_tokens: int) -> list[float]:
+        """Reserve budget and return the caller's own reservation cell.
+
+        The cell is returned rather than kept implicitly because this bucket is
+        shared by concurrent callers. The bid graph fans out three analyses in
+        one superstep, so three reservations are outstanding before any
+        response arrives; an earlier version corrected `self._tokens[-1]`,
+        which meant the first response to land rewrote the *last* reservation
+        made -- a different request's. Pruning could shift that further, onto a
+        request from a later superstep entirely. The accounting then drifted
+        from reality in whichever direction the mix of estimates happened to
+        push it, and the throttle it feeds stopped protecting the fan-out it
+        was written for.
+        """
         while True:
             async with self._lock:
                 now = time.monotonic()
                 self._prune(now)
-                spent = sum(n for _, n in self._tokens)
+                spent = sum(cell[1] for cell in self._tokens)
                 if len(self._requests) < self.rpm and spent + estimated_tokens <= self.tpm:
                     self._requests.append(now)
-                    self._tokens.append((now, estimated_tokens))
-                    return
+                    cell: list[float] = [now, float(estimated_tokens)]
+                    self._tokens.append(cell)
+                    return cell
                 oldest = min(
-                    [t for t in self._requests] + [t for t, _ in self._tokens], default=now
+                    [t for t in self._requests] + [cell[0] for cell in self._tokens],
+                    default=now,
                 )
                 wait = max(0.05, 60.0 - (now - oldest))
             await asyncio.sleep(min(wait, 5.0))
 
-    def record_actual(self, estimated: int, actual: int) -> None:
-        """Correct the reservation once real usage is known."""
-        if not self._tokens or actual == estimated:
+    def record_actual(self, reservation: list[float] | None, actual: int) -> None:
+        """Correct one reservation once its real usage is known.
+
+        Safe to call with a cell that has already been pruned: mutating a cell
+        no longer in the window simply has no effect, which is the correct
+        outcome.
+        """
+        if reservation is None:
             return
-        timestamp, _ = self._tokens[-1]
-        self._tokens[-1] = (timestamp, actual)
+        reservation[1] = float(actual)
 
 
 class ProviderRateLimited(RuntimeError):
@@ -522,6 +544,7 @@ class LLMClient:
         last_error: Exception | None = None
         rate_limited = 0
         max_rate_limit_waits = 8
+        reservation: list[float] | None = None
 
         attempt = -1
         while True:
@@ -538,10 +561,10 @@ class LLMClient:
             # behind a 60-second wait. The reservation is corrected to actual
             # usage as soon as the response arrives.
             if provider_name != "offline":
-                reservation = estimate_tokens(json.dumps(messages)) + max(
+                estimated = estimate_tokens(json.dumps(messages)) + max(
                     128, int(max_tokens * 0.3)
                 )
-                await self._bucket.acquire(reservation)
+                reservation = await self._bucket.acquire(estimated)
             started = time.perf_counter()
             try:
                 text, usage = await provider.complete(
