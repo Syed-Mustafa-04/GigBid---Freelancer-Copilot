@@ -20,6 +20,8 @@ that reaches a client.
 > reproduce them. See [`docs/DEPLOY.md`](docs/DEPLOY.md).
 > private comment
 > **Demo video:** _add the 3-minute link here_
+>
+> **Technical write-up:** [My prompt-injection detector was 100% accurate. Then I tested it properly.](https://medium.com/@syedd0408/my-prompt-injection-detector-was-100-accurate-then-i-tested-it-properly-22d9bd03e712)
 > **Portfolio MCP server:** [`mcp_servers/portfolio`](mcp_servers/portfolio) —
 > point Claude Desktop or Cursor at it and use it on your own portfolio
 

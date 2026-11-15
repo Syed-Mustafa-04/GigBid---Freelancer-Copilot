@@ -1,5 +1,7 @@
 # I built a prompt-injection detector. It caught 8 out of 8 attacks, then 0 out of 8.
 
+**Published:** <https://medium.com/@syedd0408/my-prompt-injection-detector-was-100-accurate-then-i-tested-it-properly-22d9bd03e712>
+
 *What happened when I wrote my own test set, and then wrote a second one I hadn't seen.*
 
 ---
