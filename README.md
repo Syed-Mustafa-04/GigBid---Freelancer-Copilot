@@ -11,7 +11,13 @@ that reaches a client.
 
 ![demo](docs/images/demo.gif)
 
-> **Live:** _add the deployed URL here_ · reviewer login in the Google Classroom
+> **Live:** <https://gigbid-web-q921.onrender.com> · reviewer login in the Google Classroom
+>
+> Hosted on Render's free plan, so the first request after a quiet period wakes
+> the service and can take about a minute. Retrieval runs on the hash embedding
+> backend there, because a 512 MB instance will not hold torch — the numbers in
+> `evals/results/` were measured with bge-small and the deployment does not
+> reproduce them. See [`docs/DEPLOY.md`](docs/DEPLOY.md).
 > private comment
 > **Demo video:** _add the 3-minute link here_
 > **Portfolio MCP server:** [`mcp_servers/portfolio`](mcp_servers/portfolio) —

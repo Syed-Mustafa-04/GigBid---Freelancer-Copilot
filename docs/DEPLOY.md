@@ -1,5 +1,28 @@
 # Deploying GigBid to a public URL
 
+**Deployed:** web <https://gigbid-web-q921.onrender.com>, API
+<https://gigbid-api-ta76.onrender.com>. Render appended a suffix to both
+service names because the unsuffixed ones were already taken by other
+accounts, so neither hostname matches the names in `render.yaml`.
+
+Four things broke on the way there, recorded so the next person does not
+rediscover them:
+
+1. `pip install -e .` ran with only `pyproject.toml` copied, so setuptools
+   could not find the package directories.
+2. `apps/web/public/` did not exist, and Docker fails a build outright on a
+   missing COPY source.
+3. `email-validator` was never declared; it was in the dev venv as somebody
+   else's transitive dependency, so the first clean container died at import.
+4. Next's standalone server binds `localhost` unless `HOSTNAME=0.0.0.0` is
+   set, which returns 502 with an empty body and a healthy-looking build log.
+
+And one that is specific to this blueprint: `autoDeployTrigger: "off"` means
+**saving an environment variable does not restart the service**. The value is
+stored and the running process keeps the old one, which looks exactly like a
+value that was never saved. `CORS_ORIGINS` is read once at import, so a
+Manual Deploy is required after changing it.
+
 Target: **Render free plan**. Two web services and one Postgres database,
 no card required. Roughly 20 minutes, most of it waiting for image builds.
 
