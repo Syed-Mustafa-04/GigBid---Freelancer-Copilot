@@ -254,9 +254,32 @@ provider.
 defaults to 4, which on a free tier produces sustained 429s and no result file.
 It is the only runner that fans out; the rest are already sequential.
 
-**Check the `provider` field of every result file before citing it.** All five
-model-dependent runners write `"provider": "live_model"` or
-`"provider": "offline_stub"`. The LLM client falls back to a deterministic
-offline stub when the key is missing or rejected, and an `offline_stub` run
-still produces a complete, plausible-looking results file whose numbers mean
-nothing.
+**Check `n_completed`, not just `provider`, before citing any result file.**
+
+All five model-dependent runners write `"provider": "live_model"` or
+`"provider": "offline_stub"`, and an `offline_stub` run produces a complete,
+plausible-looking file whose numbers mean nothing. So that field is worth
+checking -- but it is **not sufficient**, and trusting it alone was a mistake
+already made here.
+
+`provider` derives from `LLMClient.is_offline`, which tests only whether a base
+URL and API key are *configured*. It is a configuration check, not a liveness
+check. A run where the key was valid and 98% of completions were rejected with
+HTTP 429 still reports `live_model`.
+
+That exact run happened: 30 jobs, `n_completed: 0`, `n_errored: 30`, 741
+rate-limit responses against 14 successes, and every headline metric `0.0`
+because the metric functions were handed empty lists. The file reads as a
+system that scored zero on everything. It scored nothing at all.
+
+So the check is:
+
+| Field | What it tells you |
+| --- | --- |
+| `provider` | whether a key was configured -- necessary, not sufficient |
+| **`n_completed`** | **how many jobs actually produced a decision** |
+| `n_errored` | how many died |
+
+If `n_completed` is 0, every other number in the file is an artefact of
+averaging an empty list, including the Wilson intervals, which will print
+`[0.0, 0.0]` as though that were a measurement.
