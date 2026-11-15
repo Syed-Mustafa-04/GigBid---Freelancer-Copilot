@@ -47,9 +47,20 @@ Render Dashboard → **New** → **Blueprint** → select the repo. It reads
 
 ### 3. Set the four dashboard values
 
-Four variables are marked `sync: false` in `render.yaml` because they are
-secrets or circular references. Service URLs on Render are predictable from the
-service name, so they can be filled in before the first deploy.
+Five variables are marked `sync: false` in `render.yaml` because they are
+secrets or circular references, and Render prompts for them while applying the
+blueprint.
+
+**Do not assume the hostnames.** Render service names are globally unique
+across all accounts, so `gigbid-api` may already be taken and your service will
+get a different hostname. Enter the two secrets now, put your best guess in for
+the three URLs, and then **check the real URLs on each service's page once the
+services exist** and correct them. Which correction costs what:
+
+| Variable | When it is read | Cost of fixing it later |
+| --- | --- | --- |
+| `CORS_ORIGINS`, `APP_BASE_URL` | runtime | free: save and the service restarts |
+| `NEXT_PUBLIC_API_URL` | **build time** | a rebuild: Manual Deploy -> **Clear build cache & deploy** |
 
 On **`gigbid-api`**:
 
