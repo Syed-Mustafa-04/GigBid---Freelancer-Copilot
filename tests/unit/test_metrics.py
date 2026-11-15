@@ -160,6 +160,49 @@ class TestIntervals:
         result = two_proportion_z_test(51, 100, 49, 100)
         assert result["significant"] == 0.0
 
+    # --- exact values -----------------------------------------------------
+    #
+    # The tests above are property tests: they check the interval narrows, and
+    # that the z-test fires on a real difference and not on noise. Those would
+    # all still pass if the formula were subtly wrong -- a dropped continuity
+    # term, z confused with z/2 -- so they do not support the claim that the
+    # statistics are checked against hand-computed values.
+    #
+    # These do. Each expected value was derived independently from the closed
+    # form rather than captured from this implementation's output, so a
+    # transcription error in evals/metrics.py fails here instead of shipping a
+    # confidence interval that is quietly the wrong width.
+
+    def test_wilson_matches_an_independent_derivation(self):
+        """12/40 at 95%: centre 0.34802/1.09604, half-width 0.14991/1.09604."""
+        low, high = wilson_interval(12, 40)
+        assert round(low, 4) == 0.1807
+        assert round(high, 4) == 0.4543
+
+    def test_wilson_matches_the_published_reference_for_one_in_ten(self):
+        """(0.0179, 0.4042) is the standard worked example for 1/10 at 95%."""
+        low, high = wilson_interval(1, 10)
+        assert round(low, 4) == 0.0179
+        assert round(high, 4) == 0.4042
+
+    def test_wilson_lower_bound_is_clamped_not_negative(self):
+        """0/10 derives to -0.0; a negative reply rate would be nonsense."""
+        low, high = wilson_interval(0, 10)
+        assert low == 0.0
+        assert round(high, 4) == 0.2775
+
+    def test_wilson_is_asymmetric_about_the_point_estimate(self):
+        """The asymmetry is the whole reason for preferring Wilson to normal."""
+        low, high = wilson_interval(1, 10)
+        assert (0.1 - low) < (high - 0.1)
+
+    def test_two_proportion_matches_an_independent_derivation(self):
+        """60/100 vs 45/100: pooled 0.525, SE 0.0706223, z 2.123977."""
+        result = two_proportion_z_test(60, 100, 45, 100)
+        assert round(result["z"], 3) == 2.124
+        assert round(result["p_value"], 5) == 0.03367
+        assert result["significant"] == 1.0
+
 
 class TestRateLimitRetry:
     """A 429 must not consume the retry budget.
