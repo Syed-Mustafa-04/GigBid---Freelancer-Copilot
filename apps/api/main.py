@@ -7,6 +7,7 @@ as a runtime error in the browser.
 
 from __future__ import annotations
 
+import asyncio
 import os
 from contextlib import asynccontextmanager
 from typing import Any
@@ -64,7 +65,35 @@ async def lifespan(_: FastAPI):
         f"profile={cfg.profile_name} rag={cfg.get('rag.shipped_variant')}"
     )
     print(f"[api] {provider_banner()}")
-    yield
+
+    # Co-hosted scouting loop.
+    #
+    # Render's free plan plus most small hosts bill a background worker as a
+    # separate paid service, so a free deployment would otherwise ship without
+    # scheduled scouting at all. The loop is the same `run_forever` the worker
+    # process runs; hosting it here changes where it runs, not what it does.
+    #
+    # Default OFF, deliberately. The pass analyses every new job on every saved
+    # search with a real model, so leaving it on would quietly spend the
+    # free-tier quota overnight with nobody watching -- the exact "poisoned job
+    # burns the budget" failure worker/tasks.py already guards against. A
+    # deployer who wants it opts in.
+    worker_task: asyncio.Task | None = None
+    if os.getenv("RUN_WORKER_IN_API", "").lower() in {"1", "true", "yes"}:
+        from worker.tasks import run_forever
+
+        worker_task = asyncio.create_task(run_forever())
+        print("[api] scouting loop co-hosted in this process (RUN_WORKER_IN_API)")
+
+    try:
+        yield
+    finally:
+        if worker_task is not None:
+            worker_task.cancel()
+            try:
+                await worker_task
+            except (asyncio.CancelledError, Exception):  # noqa: BLE001
+                pass
 
 
 app = FastAPI(
@@ -91,6 +120,34 @@ app.add_middleware(
 )
 
 app.include_router(router)
+
+
+# Optionally co-host the simulator.
+#
+# GigSim normally runs as its own service, which is the honest topology: the
+# marketplace is remote, and the outage test depends on being able to kill it
+# independently. That stays the default.
+#
+# On a free host, though, each extra service is a separate cold start. A
+# reviewer opening the URL would wait for the web app to wake, then the API,
+# then the simulator, before the first job list renders. Mounting GigSim here
+# removes one of those waits.
+#
+# Safe to mount because gigsim.server builds its world at import time; its
+# lifespan only logs, and a mounted sub-app's lifespan is not run by the
+# parent. Set GIGSIM_BASE_URL to <this service>/gigsim when enabling it.
+if os.getenv("MOUNT_GIGSIM", "").lower() in {"1", "true", "yes"}:
+    from gigsim.server import app as gigsim_app
+
+    app.mount("/gigsim", gigsim_app)
+
+    # The marketplace adapter reaches GigSim over HTTP by GIGSIM_BASE_URL, and
+    # it reads that per request, so overriding it here is enough. Mounting the
+    # simulator and then leaving the adapter pointed at a separate host would
+    # be the worst of both: a process serving a simulator nobody talks to.
+    _port = os.getenv("PORT", "8000")
+    os.environ["GIGSIM_BASE_URL"] = f"http://127.0.0.1:{_port}/gigsim"
+    print(f"[api] GigSim mounted at /gigsim, adapter -> {os.environ['GIGSIM_BASE_URL']}")
 
 
 @app.get("/health", tags=["system"])
