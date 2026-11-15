@@ -7,6 +7,12 @@ dependencies = [
   "fastapi==0.118.0",
   "uvicorn[standard]==0.37.0",
   "pydantic==2.11.9",
+  # Required by pydantic's EmailStr, which apps/api/routers/core.py uses for the
+  # register and login payloads. It arrived in the dev venv as somebody else's
+  # transitive dependency and was never declared, so every local run worked and
+  # the first clean container died at import with "No module named
+  # 'email_validator'".
+  "email-validator==2.4.0",
   "pydantic-settings==2.11.0",
   "pyyaml==6.0.2",
   "httpx==0.28.1",

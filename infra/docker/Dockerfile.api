@@ -11,6 +11,18 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends build-essential curl \
  && rm -rf /var/lib/apt/lists/*
 
+# Which embedding backend this image is built for.
+#
+# Declared here, before the install, because it decides whether torch is
+# needed at all. It is also used further down, where the vector index is baked
+# into the image: the backend that builds the index must be the backend that
+# queries it, and Render passes service environment variables to Docker builds
+# as build args so the same value reaches both sides.
+#
+# Changing EMBEDDING_BACKEND therefore requires a rebuild, not a restart.
+ARG EMBEDDING_BACKEND=local
+ENV EMBEDDING_BACKEND=${EMBEDDING_BACKEND}
+
 COPY pyproject.toml ./
 # Install dependencies in their own layer so code changes do not re-resolve.
 #
@@ -25,11 +37,17 @@ COPY pyproject.toml ./
 # The real source is copied over the stubs below. The install is editable, so
 # it resolves against whatever is on disk at run time, and the dependency
 # resolution stays in its own cached layer.
-# Written on one line on purpose. This file is CRLF, and a backslash
-# continuation followed by CRLF escapes the carriage return rather than
+# The [embed] extra is installed only when it will actually be used. It pulls
+# sentence-transformers and torch, and the torch wheel alone is 888 MB -- on a
+# free host that is most of the build time and most of the disk, downloaded to
+# support a backend the deployment has explicitly turned off. A hash-backed
+# image needs none of it.
+#
+# Written on one line on purpose: this file is CRLF, and a backslash
+# continuation followed by a carriage return escapes the CR instead of
 # continuing the line, so the next line is parsed as an instruction and the
 # build dies with "unknown instruction: &&".
-RUN mkdir -p agent rag gigsim mcp_servers worker evals apps && pip install --upgrade pip && (pip install -e ".[embed]" || pip install -e .)
+RUN mkdir -p agent rag gigsim mcp_servers worker evals apps && pip install --upgrade pip && if [ "$EMBEDDING_BACKEND" = "local" ]; then pip install -e ".[embed]"; else echo "EMBEDDING_BACKEND=$EMBEDDING_BACKEND: skipping the [embed] extra (no torch)"; pip install -e .; fi
 
 COPY agent/ ./agent/
 COPY rag/ ./rag/
@@ -41,22 +59,12 @@ COPY gigsim/ ./gigsim/
 COPY scripts/ ./scripts/
 COPY data/ ./data/
 
-# The index is baked into the image, so the backend that builds it must be the
-# backend that queries it.
+# The index is baked with the backend declared at the top of this file, so the
+# backend that builds it is the backend that queries it. A mismatch would not
+# raise -- the hash embedder and bge-small are both 384-dimensional -- so
+# retrieval would silently return noise; CorpusIndex.load refuses that
+# combination outright.
 #
-# Without this ARG the index was always built with the code default (`local`,
-# bge-small) while the running container took its backend from an environment
-# variable. A deployment setting EMBEDDING_BACKEND=hash -- which a 512 MB host
-# must, since torch will not fit -- then queried a bge-built index with hash
-# vectors. Both are 384-dimensional, so nothing raised; retrieval just returned
-# noise. CorpusIndex.load now refuses that combination outright, and this makes
-# sure it does not arise: Render passes service environment variables to Docker
-# builds as build args, so the same value reaches both sides.
-#
-# Changing EMBEDDING_BACKEND therefore requires a rebuild, not just a restart.
-ARG EMBEDDING_BACKEND=local
-ENV EMBEDDING_BACKEND=${EMBEDDING_BACKEND}
-
 # Pre-build the vector index at image build time: a cold first request that
 # spends 110s embedding the corpus looks like an outage to the user.
 RUN python -m scripts.generate_corpus --seed 20261115 \
