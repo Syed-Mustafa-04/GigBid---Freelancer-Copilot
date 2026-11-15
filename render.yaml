@@ -36,7 +36,9 @@ services:
     dockerfilePath: ./infra/docker/Dockerfile.api
     dockerContext: .
     healthCheckPath: /health
-    autoDeploy: false
+    # Quoted deliberately: YAML 1.1 reads a bare `off` as boolean false, and
+    # Render expects the string "off".
+    autoDeployTrigger: "off"
     envVars:
       - key: APP_ENV
         value: production
@@ -116,7 +118,9 @@ services:
     region: oregon
     dockerfilePath: ./infra/docker/Dockerfile.web
     dockerContext: .
-    autoDeploy: false
+    # Quoted deliberately: YAML 1.1 reads a bare `off` as boolean false, and
+    # Render expects the string "off".
+    autoDeployTrigger: "off"
     envVars:
       # Baked into the client bundle at BUILD time, not read at runtime.
       # Render passes service environment variables to Docker builds as build
