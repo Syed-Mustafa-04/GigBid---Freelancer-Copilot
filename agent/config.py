@@ -201,12 +201,41 @@ class Secrets:
         return value
 
     @staticmethod
+    def _sqlalchemy_scheme(url: str) -> str:
+        """Pin the Postgres driver SQLAlchemy should use.
+
+        Managed hosts hand out a bare ``postgresql://`` (Render, Fly) or the
+        legacy ``postgres://`` (Heroku, Supabase) URL. SQLAlchemy reads a bare
+        scheme as "use psycopg2", which this project does not depend on -- only
+        psycopg 3 is declared -- so the API crashes at boot with
+        ``ModuleNotFoundError: psycopg2`` on a host that is configured
+        perfectly correctly. Rewriting the scheme here fixes it once, rather
+        than leaving every deployer to discover it from a stack trace.
+
+        An explicit driver (``postgresql+asyncpg://``) is left alone: someone
+        who named a driver meant it.
+        """
+        for prefix in ("postgresql://", "postgres://"):
+            if url.startswith(prefix):
+                return "postgresql+psycopg://" + url[len(prefix):]
+        return url
+
+    @staticmethod
     def database_url() -> str:
-        return os.getenv("DATABASE_URL") or f"sqlite:///{REPO_ROOT / 'gigbid.sqlite'}"
+        url = os.getenv("DATABASE_URL")
+        if not url:
+            return f"sqlite:///{REPO_ROOT / 'gigbid.sqlite'}"
+        return Secrets._sqlalchemy_scheme(url)
 
     @staticmethod
     def checkpoint_url() -> str | None:
-        """Postgres URL for the LangGraph checkpointer, or None for SQLite."""
+        """Postgres URL for the LangGraph checkpointer, or None for SQLite.
+
+        Deliberately *not* passed through ``_sqlalchemy_scheme``. The
+        checkpointer hands this string to psycopg directly rather than to
+        SQLAlchemy, and psycopg rejects a ``postgresql+psycopg://`` DSN. The
+        two variables want different spellings of the same database.
+        """
         return os.getenv("CHECKPOINT_DATABASE_URL") or None
 
     @staticmethod
