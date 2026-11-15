@@ -1,0 +1,128 @@
+# GigBid on Render — free-plan blueprint
+#
+# Render's free plan bills background workers and private services, so the
+# nine-container compose topology cannot be lifted across as-is. Two things
+# make it fit without deleting features:
+#
+#   * GIGBID_MCP_TRANSPORT_MODE=inprocess   — the three MCP servers run inside
+#     the API process. This is an existing supported mode, not a deployment
+#     hack; the API and the eval harness already default to it.
+#   * MOUNT_GIGSIM=1                        — the simulator is mounted at
+#     /gigsim on the API service.
+#
+# Nine services become two web services and one database, all on the free
+# plan. The compose file is unchanged and remains the topology the outage
+# test exercises.
+#
+# Apply with: Render Dashboard -> New -> Blueprint -> point at this repo.
+# Four values are marked `sync: false` and must be entered in the dashboard;
+# they are listed in docs/DEPLOY.md.
+
+databases:
+  - name: gigbid-db
+    plan: free
+    databaseName: gigbid
+    user: gigbid
+
+services:
+  # ---------------------------------------------------------------------
+  # API + worker-optional + MCP servers (in-process) + GigSim (mounted)
+  # ---------------------------------------------------------------------
+  - type: web
+    name: gigbid-api
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./infra/docker/Dockerfile.api
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeploy: false
+    envVars:
+      - key: APP_ENV
+        value: production
+
+      # Rotated by Render, never in git. Invalidates existing sessions on
+      # every redeploy, which is correct for a demo deployment.
+      - key: APP_SECRET_KEY
+        generateValue: true
+
+      # Both point at the same database and intentionally differ in spelling.
+      # DATABASE_URL goes to SQLAlchemy, which reads a bare `postgresql://`
+      # as psycopg2 — a driver this project does not depend on. Secrets.
+      # database_url() rewrites it to `postgresql+psycopg://`.
+      # CHECKPOINT_DATABASE_URL goes to psycopg directly, which rejects that
+      # spelling, so it is passed through untouched. See agent/config.py.
+      - key: DATABASE_URL
+        fromDatabase:
+          name: gigbid-db
+          property: connectionString
+      - key: CHECKPOINT_DATABASE_URL
+        fromDatabase:
+          name: gigbid-db
+          property: connectionString
+
+      - key: MARKETPLACE_MODE
+        value: gigsim
+      - key: MOUNT_GIGSIM
+        value: "1"
+      - key: GIGBID_MCP_TRANSPORT_MODE
+        value: inprocess
+
+      # hash, not local. A free instance is 512 MB and 0.1 CPU; torch plus
+      # bge-small does not comfortably fit, and an OOM-killed API is worse
+      # than weaker retrieval. The index is built with the same backend at
+      # image build time, so queries and corpus stay consistent.
+      #
+      # This DOES degrade evidence quality relative to every number in
+      # evals/results/. Those were measured with bge-small and the deployment
+      # does not reproduce them. Move this service to a Starter instance and
+      # set `local` to get the measured behaviour back.
+      - key: EMBEDDING_BACKEND
+        value: hash
+
+      - key: MODEL_PROFILE
+        value: open
+      - key: OPEN_LLM_BASE_URL
+        value: https://api.groq.com/openai/v1
+
+      # Off by default. The scouting pass analyses every new job on every
+      # saved search with a real model; left on, it spends the free-tier
+      # quota overnight with nobody watching.
+      - key: RUN_WORKER_IN_API
+        value: "0"
+
+      - key: REVIEWER_EMAIL
+        value: reviewer@gigbid.app
+
+      # --- entered in the dashboard, never committed --------------------
+      - key: OPEN_LLM_API_KEY
+        sync: false
+      - key: REVIEWER_PASSWORD
+        sync: false
+      # https://gigbid-web.onrender.com  (no trailing slash)
+      - key: CORS_ORIGINS
+        sync: false
+      # https://gigbid-api.onrender.com
+      - key: APP_BASE_URL
+        sync: false
+
+  # ---------------------------------------------------------------------
+  # Next.js front end
+  # ---------------------------------------------------------------------
+  - type: web
+    name: gigbid-web
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./infra/docker/Dockerfile.web
+    dockerContext: .
+    autoDeploy: false
+    envVars:
+      # Baked into the client bundle at BUILD time, not read at runtime.
+      # Render passes service environment variables to Docker builds as build
+      # args, and Dockerfile.web declares the matching ARG before `npm run
+      # build`, so this works — but only if the value is set BEFORE the first
+      # build. Setting it afterwards requires a manual redeploy with cache
+      # cleared, or the deployed UI keeps calling http://localhost:8000.
+      - key: NEXT_PUBLIC_API_URL
+        sync: false
