@@ -209,3 +209,54 @@ pg_dump gigbid > backup.sql     # app data AND LangGraph checkpoints
 
 Losing the checkpointer loses every pending approval. Losing the app database
 loses the pipeline and analytics but not in-flight threads.
+
+## Running without `make` (Windows)
+
+`make` is not installed on the Windows development machine this was built on.
+Every `make <target>` in these docs is still correct on Linux, macOS and inside
+the Docker images; this table is the direct equivalent for a shell that has no
+`make`. `$(PY)` is `.venv/Scripts/python.exe` on Windows and `.venv/bin/python`
+elsewhere.
+
+| Target | Direct equivalent |
+| --- | --- |
+| `make install` | `python -m venv .venv` then `.venv/Scripts/python.exe -m pip install -e ".[dev,embed]"` |
+| `make seed` | `.venv/Scripts/python.exe -m scripts.generate_corpus --seed 20261115` then the same for `generate_jobs` |
+| `make gigsim` | `.venv/Scripts/python.exe -m uvicorn gigsim.server:app --port 8081 --reload` |
+| `make api` | `.venv/Scripts/python.exe -m uvicorn apps.api.main:app --port 8000 --reload` |
+| `make worker` | `.venv/Scripts/python.exe -m worker.tasks` |
+| `make web` | `cd apps/web && npm run dev` |
+| `make test` | `.venv/Scripts/python.exe -m pytest -q` |
+| `make lint` | `.venv/Scripts/python.exe -m ruff check .` |
+| `make snapshot` | `.venv/Scripts/python.exe -m tests.contract.record_snapshot` |
+| `make up` / `make down` | `cd infra && docker compose --env-file ../.env up --build -d` / `... down -v` |
+
+### Evaluations, one at a time
+
+The free LLM tier allows 25 requests and 12,000 tokens per minute. Running two
+of these at once is what exhausted the quota during evaluation and left five
+result files unproduced, so run them **singly**, with nothing else hitting the
+provider.
+
+| Evaluation | Command | Needs a model? |
+| --- | --- | --- |
+| RAG variants | `EMBEDDING_BACKEND=local $(PY) -m evals.runners.rag_eval --limit 90 --k 5` | no |
+| Ablation | `EMBEDDING_BACKEND=local $(PY) -m evals.runners.ablation --limit 60` | no |
+| Tool granularity | `$(PY) -m evals.runners.tool_granularity` | no |
+| Injection defence | `$(PY) -m evals.runners.injection_eval` | no |
+| Decision quality | `$(PY) -m evals.runners.decision_eval --limit 30 --concurrency 1` | **yes** |
+| Multi-agent comparison | `$(PY) -m evals.runners.multi_agent_comparison --limit 30` | **yes** |
+| GigSim outcomes | `$(PY) -m evals.runners.gigsim_outcomes --limit 40` | **yes** |
+| Proposal experiment | `$(PY) -m evals.runners.proposal_experiment --limit 40` | **yes** |
+| Judge calibration | `$(PY) -m evals.runners.judge_calibration` | **yes**, plus 30 hand labels |
+
+`--concurrency 1` on the decision eval is not a tuning preference: the runner
+defaults to 4, which on a free tier produces sustained 429s and no result file.
+It is the only runner that fans out; the rest are already sequential.
+
+**Check the `provider` field of every result file before citing it.** All five
+model-dependent runners write `"provider": "live_model"` or
+`"provider": "offline_stub"`. The LLM client falls back to a deterministic
+offline stub when the key is missing or rejected, and an `offline_stub` run
+still produces a complete, plausible-looking results file whose numbers mean
+nothing.

@@ -135,11 +135,16 @@ the deployed URL.
 ## Before you push
 
 ```bash
-make test                                  # 70 tests
+.venv/Scripts/python.exe -m pytest -q      # 76 tests
 .venv/Scripts/python.exe -m ruff check .   # clean
 cd infra && docker compose --env-file ../.env config --quiet
 git ls-files | grep -x ".env"              # must print NOTHING
 ```
+
+`make` is not installed on the development machine, so the commands above
+call the interpreter directly. Every `make <target>` elsewhere in the docs
+is still correct on Linux, macOS and inside Docker; `docs/RUNBOOK.md` lists
+the direct equivalent of each one.
 
 `.env` holds your Groq key and is gitignored. `.env.example` has been scrubbed
 back to placeholders — **check it stays that way before every push.**

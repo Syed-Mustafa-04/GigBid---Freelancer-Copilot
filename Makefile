@@ -95,13 +95,26 @@ typecheck:
 	$(PY) -m mypy agent rag apps/api --ignore-missing-imports
 
 # ----------------------------------------------------------- evaluation ----
-eval: eval-rag eval-decision eval-tools eval-agents eval-injection  ## Run every evaluation
+#
+# On a free LLM tier (25 requests/min, 12,000 tokens/min) these must be run
+# ONE AT A TIME. Two concurrent callers is what exhausted the quota during
+# evaluation and left five result files unproduced. `make eval` runs the
+# model-dependent targets back to back and will not finish on a free tier;
+# it is kept for a paid key.
+#
+# The four targets that need no model -- eval-rag, eval-tools, eval-injection,
+# eval-ablation -- can be run any time.
+
+eval: eval-rag eval-decision eval-tools eval-agents eval-injection  ## Run every evaluation (needs paid quota)
 
 eval-rag:  ## R&D B: compare all 10 retrieval variants
 	EMBEDDING_BACKEND=local $(PY) -m evals.runners.rag_eval --limit 90 --k 5
 
 eval-decision:  ## Bid/skip F1, scam precision and recall, price in band
-	$(PY) -m evals.runners.decision_eval --limit 120
+# --concurrency 1 is not a tuning choice. The runner defaults to 4, which on a
+# free tier produces sustained 429s and no result file. Raise it only with a
+# paid key. 120 jobs sequentially is slow; override with LIMIT=30 to start.
+	$(PY) -m evals.runners.decision_eval --limit $(or $(LIMIT),120) --concurrency $(or $(CONCURRENCY),1)
 
 eval-tools:  ## R&D A: tool granularity
 	$(PY) -m evals.runners.tool_granularity

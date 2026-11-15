@@ -750,7 +750,7 @@ run.
 against the 25 s per-job target, the slowest of the ten variants at 1,698 ms —
 retrieval is not the risk. The cross-encoder at 53.6 s per job is the one
 measured breach of the latency budget, which is why it does not ship uncapped.
-70 tests pass (50 unit, 8 contract, 12 integration) and lint is clean
+76 tests pass (56 unit, 8 contract, 12 integration) and lint is clean
 repo-wide.
 
 **The operating constraint that stopped the rest.** The free-tier quota on the
