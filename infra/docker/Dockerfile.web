@@ -21,4 +21,18 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 USER nextjs
 EXPOSE 3000
+
+# Next's standalone server reads both of these at run time.
+#
+# HOSTNAME defaults to localhost in the standalone output. A server bound to
+# localhost inside a container accepts nothing from outside it, so a managed
+# host's router cannot reach the process and every request comes back 502 with
+# an empty body and a healthy-looking build log. Binding 0.0.0.0 is what makes
+# the container addressable.
+#
+# PORT is assigned by the host (Render, Fly, Cloud Run) and defaults to 3000
+# for local use. server.js honours it without further wiring.
+ENV HOSTNAME=0.0.0.0
+ENV PORT=3000
+
 CMD ["node", "server.js"]
