@@ -37,7 +37,13 @@ const PASSWORD = process.env.REVIEWER_PASSWORD ?? 'gigbid-demo-2026';
 const OUT = path.join(REPO, 'docs', 'video', new Date().toISOString().replace(/[:.]/g, '-'));
 fs.mkdirSync(OUT, { recursive: true });
 
-const beat = (ms) => new Promise((r) => setTimeout(r, ms));
+// Every hold is multiplied by PACE. The brief asks for three minutes and the
+// default pacing lands around ninety seconds, so PACE=2 roughly doubles each
+// beat without changing the sequence. A narrator needs room to finish a
+// sentence over each step, and dead air is easier to cut than missing air is
+// to add.
+const PACE = Number(process.env.PACE ?? 1);
+const beat = (ms) => new Promise((r) => setTimeout(r, Math.round(ms * PACE)));
 
 async function focusOn(page, locator, { hold = 1400, click = false, label = '' } = {}) {
   try {
@@ -183,7 +189,13 @@ async function main() {
       await clearCaption(page);
       await page.goto(`${BASE}/studio/${THREAD}`, { waitUntil: 'domcontentloaded' });
       const panel = page.locator('[data-testid="approval-panel"]');
-      gateShown = await panel.isVisible({ timeout: 40000 }).catch(() => false);
+      // waitFor, not isVisible: isVisible() takes no timeout and answers
+      // immediately, so it reports false simply because the page has not
+      // finished rendering, and the gate gets silently skipped.
+      gateShown = await panel
+        .waitFor({ state: 'visible', timeout: 45000 })
+        .then(() => true)
+        .catch(() => false);
       if (gateShown) {
         await caption(page, 'A job worth bidding on. Execution stops here - nothing is sent until a human approves it.', 4200);
         await focusOn(page, panel, { hold: 3400 });
@@ -208,7 +220,15 @@ async function main() {
         }
       }
     }
-    record('approval gate', gateShown, gateShown ? 'shown and approved' : 'no pending approval supplied');
+    record(
+      'approval gate',
+      gateShown,
+      gateShown
+        ? 'shown and approved'
+        : THREAD
+          ? `panel never became visible on /studio/${THREAD}`
+          : 'no DEMO_THREAD supplied',
+    );
 
     // -- 6. Pipeline --------------------------------------------------------
     await clearCaption(page);
