@@ -19,6 +19,12 @@ data/raw/
 rag/index/store/
 *.sqlite
 *.sqlite3
+# SQLite writes sidecar files that *.sqlite does not match; they are
+# runtime checkpoint state, not source, and 5.4 MB of them reached a commit.
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite3-wal
+*.sqlite3-shm
 *.db
 
 # Hidden test set must never be committed
