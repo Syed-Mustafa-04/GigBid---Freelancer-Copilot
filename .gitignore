@@ -50,3 +50,11 @@ logs/
 !evals/results/traces/*.log
 demo_checkpoints.sqlite
 ci.sqlite
+
+# Raw Playwright captures are timestamped takes, several MB each and
+# regenerable from apps/web/scripts/record_demo.mjs. The finished mp4 and the
+# narration script are kept; the takes are not.
+docs/video/*/
+!docs/video/*.mp4
+!docs/video/*.gif
+!docs/video/NARRATION.md
